@@ -47,10 +47,10 @@ body,button,select,input{font-family:"Fredoka","Baloo 2","Nunito","Quicksand","M
 #s_menu .col button::before{content:"";display:inline-block;width:1.15em;height:1.15em;margin-right:.5em;vertical-align:-.22em;background:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGcgZmlsbD0iI2ZmZjBjZiI+PGVsbGlwc2UgY3g9IjMyIiBjeT0iNDIiIHJ4PSIxNCIgcnk9IjExIi8+PGVsbGlwc2UgY3g9IjEzIiBjeT0iMjkiIHJ4PSI2IiByeT0iOCIvPjxlbGxpcHNlIGN4PSIyNSIgY3k9IjE2IiByeD0iNiIgcnk9IjguNSIvPjxlbGxpcHNlIGN4PSI0MCIgY3k9IjE2IiByeD0iNiIgcnk9IjguNSIvPjxlbGxpcHNlIGN4PSI1MiIgY3k9IjI5IiByeD0iNiIgcnk9IjgiLz48L2c+PC9zdmc+") center/contain no-repeat}
 #s_menu .col button{font-size:1.35em}
 #s_menu div[style*="opacity"]{color:#ffe9b8;opacity:.8!important}
-#s_menu button,#s_name button,#s_ex button,#s_map>.row button,#ovb button{background:var(--wood);border:.18em solid #5a3513;border-radius:.7em;color:var(--cream);font-weight:800;text-shadow:0 .08em 0 #3b1f09;box-shadow:inset 0 .12em 0 #f1c88f88,0 .2em 0 #4a2a0f;padding:.45em .9em;transition:transform .08s}
-#s_menu button:hover,#s_name button:hover,#s_ex button:hover,#s_map>.row button:hover,#ovb button:hover{filter:brightness(1.12)}
-#s_menu button:active,#s_name button:active,#s_ex button:active,#s_map>.row button:active,#ovb button:active{transform:translateY(.15em);box-shadow:inset 0 .12em 0 #f1c88f88,0 .05em 0 #4a2a0f}
-#s_menu button[style*="outline"],#s_map>.row button[style*="outline"],#ovb button[style*="outline"]{outline:.18em solid #ffd54f!important;outline-offset:.08em}
+#s_menu button,#s_name button,#s_ex button,#s_map>.row button,#m_modes button,#ovb button{background:var(--wood);border:.18em solid #5a3513;border-radius:.7em;color:var(--cream);font-weight:800;text-shadow:0 .08em 0 #3b1f09;box-shadow:inset 0 .12em 0 #f1c88f88,0 .2em 0 #4a2a0f;padding:.45em .9em;transition:transform .08s}
+#s_menu button:hover,#s_name button:hover,#s_ex button:hover,#s_map>.row button:hover,#m_modes button:hover,#ovb button:hover{filter:brightness(1.12)}
+#s_menu button:active,#s_name button:active,#s_ex button:active,#s_map>.row button:active,#m_modes button:active,#ovb button:active{transform:translateY(.15em);box-shadow:inset 0 .12em 0 #f1c88f88,0 .05em 0 #4a2a0f}
+#s_menu button[style*="outline"],#s_map>.row button[style*="outline"],#m_modes button[style*="outline"],#ovb button[style*="outline"]{outline:.18em solid #ffd54f!important;outline-offset:.08em}
 #s_name label{color:var(--cream)}
 #s_name input,#s_name select,#ovb select,#ovb input[type=text]{background:#fff4dc;color:#4a2c12;border:.15em solid #5a3513;border-radius:.6em;text-shadow:none;font-weight:700}
 /* exploration */
@@ -197,15 +197,21 @@ button{white-space:nowrap}
 /* map + menu buttons */
 #s_map>.row{gap:.5em .6em;padding:.4em .8em!important}
 #s_map>.row b{font-size:1.25em}
-#s_map>.row button{font-size:1.35em!important;padding:.3em .8em!important}
+#s_map>.row button,#m_modes button{font-size:1.35em!important;padding:.3em .8em!important}
 #s_map>.row .hud{font-size:1em}
 #m_pts .pt:disabled{opacity:.75}
+/* map is FULL SCREEN; header (title, Menu, stats) overlays top-left; Story/Farm mode buttons overlay bottom centre with no bar behind them */
+#m_area{position:absolute;inset:0}
+#m_box{position:absolute;inset:0;width:100%;height:100%}
+#s_map>.row{position:absolute!important;top:.6em;left:.6em;z-index:3}
+#m_modes{position:absolute;left:50%;bottom:.9em;transform:translateX(-50%);display:flex;gap:.9em;z-index:3;white-space:nowrap}
+#m_modes button{font-size:1.5em!important;padding:.35em 1.1em!important}
 .pt{width:3.2em!important;height:3.2em!important;font-size:1.3em}
 #ovb>button,#ovb>.row>button,#ovb .g2>button{font-size:1.2em}
 .pt small{font-size:.62em!important;padding:.1em .6em!important}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 21</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 23</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -217,8 +223,10 @@ button{white-space:nowrap}
 <div class="s" id="s_vn"><div class="stage" id="vn_st" style="background:linear-gradient(#1b5e20,#a5d6a7)"><img id="vn_ov" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none"><canvas class="spr" id="vn_sp" style="left:50%;bottom:0;transform:translateX(-50%)"></canvas><div id="vn_food" class="bob" style="position:absolute;left:calc(50% - .5em);bottom:2%;font-size:7em;display:none;z-index:2;pointer-events:none">🍲</div></div>
 <div class="box" id="vn_box" onclick="step()"><div class="who" id="vn_who"></div><div id="vn_t"></div></div><div class="col" style="max-width:none" id="vn_ch"></div></div>
 
-<div class="s" id="s_map"><svg id="m_svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg><div id="m_pts" style="position:absolute;inset:0"></div><canvas id="m_cat" style="position:absolute;transform:translate(-50%,-88%);pointer-events:none;z-index:1"></canvas>
-<div class="row" style="position:relative;z-index:3;background:#000a;border-radius:.6em;padding:.3em .6em;align-self:flex-start"><b data-i="map"></b><button id="m_story" data-i="story" onclick="setMode(0)"></button><button id="m_farm" data-i="farm" onclick="setMode(1)"></button><button data-i="menu" onclick="gmenu()"></button><span class="hud" id="m_hud"></span></div></div>
+<div class="s" id="s_map">
+<div class="row" style="position:relative;z-index:3;background:#000a;border-radius:.6em;padding:.3em .6em;align-self:flex-start;flex:0 0 auto"><b data-i="map"></b><button data-i="menu" onclick="gmenu()"></button><span class="hud" id="m_hud"></span></div>
+<div id="m_area"><div id="m_box"><svg id="m_svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg><div id="m_pts" style="position:absolute;inset:0"></div><canvas id="m_cat" style="position:absolute;transform:translate(-50%,-88%);pointer-events:none;z-index:1"></canvas></div></div>
+<div id="m_modes"><button id="m_story" data-i="story" onclick="setMode(0)"></button><button id="m_farm" data-i="farm" onclick="setMode(1)"></button></div></div>
 <div class="s" id="s_ex"><div class="row" style="justify-content:space-between"><b id="ex_h"></b><span><button onclick="exMap()">🗺 Map</button> <button data-i="menu" onclick="gmenu()"></button></span></div><div class="hud" id="ex_hud"></div>
 <div class="stage" id="ex_st"><canvas class="spr" id="ex_cat" style="left:6%"></canvas></div><div id="ex_bot"><button data-i="fwd" id="ex_fwd" onclick="fwd()"></button><div class="box" id="ex_log"></div></div></div>
 
@@ -240,7 +248,7 @@ ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',
 zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',save:'存档',load:'读档'}};
 const t=k=>L[lang][k]||L.en[k]||k;
 /* ---- BGM: every track is prepared with tools/prep_bgm.py (-18 LUFS, 96 kbps) and ALL tracks share ONE slider (cg_bgm) ---- */
-const BGM={home:'assets/bgm/home.mp3'};
+const BGM={home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3'};
 const bgmA=new Audio();bgmA.loop=true;bgmA.preload='auto';
 let bgmWant=null,bgmKey=null,bgmT=0;
 const bgmVol=()=>Math.max(0,Math.min(1,ls.get('cg_bgm',70)/100));
@@ -248,7 +256,7 @@ function bgmSet(){clearInterval(bgmT);bgmA.volume=bgmVol()}
 function bgmFade(to,done){clearInterval(bgmT);bgmT=setInterval(()=>{const d=to-bgmA.volume;if(Math.abs(d)<.03){bgmA.volume=to;clearInterval(bgmT);done&&done()}else bgmA.volume=Math.max(0,Math.min(1,bgmA.volume+Math.sign(d)*.03))},40)}
 function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmKey=k;bgmA.src=BGM[k];bgmA.volume=0}const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});bgmFade(bgmVol())}
 function bgmStop(){bgmWant=null;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
-function bgmShow(i){i==='menu'?bgmPlay('home'):bgmStop()}
+function bgmShow(i){i==='menu'?bgmPlay('home'):i==='map'?bgmPlay('map'):bgmStop()}
 ['pointerdown','keydown','touchend'].forEach(e=>addEventListener(e,()=>{if(bgmWant&&bgmA.paused)bgmPlay(bgmWant)},true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmA.pause();else if(bgmWant)bgmPlay(bgmWant)});
 /* ---- ultimate video music (assets/bgm/ultimate.mp3, prepared with tools/prep_bgm.py): starts with the video, follows the BGM slider (cg_bgm), fades out over the last 0.9 s of the video so shorter videos cut it early ---- */
@@ -530,7 +538,8 @@ function big(p){ov(`<img src="assets/${p}.webp" style="width:100%;border-radius:
 function settings(){ov(`<h2>${t('set')}</h2><label>Language <select onchange="lang=this.value;ls.set('cg_lang',lang);ui();settings()">${['en','ja','zh'].map(l=>`<option ${l==lang?'selected':''}>${l}</option>`).join('')}</select></label><label>Sound effects <input type="range" value="${ls.get('cg_sfx',70)}" oninput="ls.set('cg_sfx',+this.value);this.nextElementSibling.textContent=this.value+'%'" onchange="sfxPlay('ultimate')"><span class="vp">${ls.get('cg_sfx',70)}%</span></label><label>BGM volume <input type="range" value="${ls.get('cg_bgm',70)}" oninput="ls.set('cg_bgm',+this.value);bgmSet();this.nextElementSibling.textContent=this.value+'%'"><span class="vp">${ls.get('cg_bgm',70)}%</span></label><button onclick="if(confirm('Erase ALL saves and unlocked endings?')){localStorage.clear();refreshMenu();cl()}">Reset all data (testing)</button><button onclick="cl()">${t('close')}</button>`)}
 function exitG(){alert('Thanks for playing!');try{window.close()}catch(e){}}
 /* ---------- map / explore ---------- */
-function map(){wk++;ecat.play('idle');show('map');X=null;const sc=$('s_map');sc.style.background='url(assets/backgrounds/map_interactive.webp) center/100% 100%';$('m_hud').textContent=hud();$('m_story').style.outline=fm?'':'2px solid #ffb3d9';$('m_farm').style.outline=fm?'2px solid #ffb3d9':'';
+addEventListener('resize',()=>{if($('s_map').classList.contains('on'))sz($('m_cat'),.2)});
+function map(){wk++;ecat.play('idle');show('map');X=null;const sc=$('m_box');sc.style.background='url(assets/backgrounds/map_interactive.webp) center/100% 100%';$('m_hud').textContent=hud();$('m_story').style.outline=fm?'':'2px solid #ffb3d9';$('m_farm').style.outline=fm?'2px solid #ffb3d9':'';
   $('m_svg').innerHTML=`<polyline points="${PT.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#5d3a1a" stroke-width="3" stroke-dasharray="8 6" vector-effect="non-scaling-stroke"/>`;
   const bx=$('m_pts');bx.innerHTML='';AR.forEach((a,i)=>{const b=document.createElement('button'),ok=fm?i<=S.prog:i===S.prog;b.innerHTML=(i+1)+'<small>'+a.n+(i<S.prog?' ✔':i>S.prog?' 🔒':'')+'</small>';b.className='pt';b.disabled=!ok;b.style.left=PT[i][0]+'%';b.style.top=PT[i][1]+'%';b.onclick=()=>goPt(i);bx.appendChild(b)});
   const mc=S.mc||0,c=$('m_cat');sz(c,.2);c.style.transition='none';c.style.transform=`translate(-50%,calc(-100% + ${Math.round(.12*c._nom)}px))`;c.style.left=PT[mc][0]+'%';c.style.top=PT[mc][1]+'%';mcat.play(mc===4?'float':'idle');autosave()}
