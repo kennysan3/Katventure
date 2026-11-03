@@ -211,7 +211,7 @@ button{white-space:nowrap}
 .pt small{font-size:.62em!important;padding:.1em .6em!important}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 23</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 25</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -248,25 +248,33 @@ ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',
 zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',save:'存档',load:'读档'}};
 const t=k=>L[lang][k]||L.en[k]||k;
 /* ---- BGM: every track is prepared with tools/prep_bgm.py (-18 LUFS, 96 kbps) and ALL tracks share ONE slider (cg_bgm) ---- */
-const BGM={home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3'};
+const BGM={home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3'};
 const bgmA=new Audio();bgmA.loop=true;bgmA.preload='auto';
-let bgmWant=null,bgmKey=null,bgmT=0;
+let bgmWant=null,bgmKey=null,bgmT=0,bgmHeld=false;
 const bgmVol=()=>Math.max(0,Math.min(1,ls.get('cg_bgm',70)/100));
 function bgmSet(){clearInterval(bgmT);bgmA.volume=bgmVol()}
 function bgmFade(to,done){clearInterval(bgmT);bgmT=setInterval(()=>{const d=to-bgmA.volume;if(Math.abs(d)<.03){bgmA.volume=to;clearInterval(bgmT);done&&done()}else bgmA.volume=Math.max(0,Math.min(1,bgmA.volume+Math.sign(d)*.03))},40)}
 function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmKey=k;bgmA.src=BGM[k];bgmA.volume=0}const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});bgmFade(bgmVol())}
-function bgmStop(){bgmWant=null;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
-function bgmShow(i){i==='menu'?bgmPlay('home'):i==='map'?bgmPlay('map'):bgmStop()}
-['pointerdown','keydown','touchend'].forEach(e=>addEventListener(e,()=>{if(bgmWant&&bgmA.paused)bgmPlay(bgmWant)},true));
-document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmA.pause();else if(bgmWant)bgmPlay(bgmWant)});
+function bgmStop(){bgmWant=null;bgmHeld=false;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
+function bgmShow(i){if(i==='cb'){bgmKey=null;bgmHeld=false;bgmPlay(E&&E.boss?'boss':'battle')}else i==='menu'?bgmPlay('home'):i==='map'?bgmPlay('map'):bgmStop()}
+/* combat music: battle (normal monsters) and boss; a fight starts the track from the beginning; it fades out when the monster dies, the cat girl falls or the player escapes (so the Win jingle is not masked) and is held (faded out, paused) while an ultimate video plays, because the ultimate has its own music */
+function bgmHold(){if(!bgmWant)return;bgmHeld=true;bgmFade(0,()=>{if(bgmHeld)bgmA.pause()})}
+function bgmRelease(){if(bgmHeld&&bgmWant){bgmHeld=false;bgmPlay(bgmWant)}}
+['pointerdown','keydown','touchend'].forEach(e=>addEventListener(e,()=>{if(bgmWant&&!bgmHeld&&bgmA.paused)bgmPlay(bgmWant)},true));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmA.pause();else if(bgmWant&&!bgmHeld)bgmPlay(bgmWant)});
 /* ---- ultimate video music (assets/bgm/ultimate.mp3, prepared with tools/prep_bgm.py): starts with the video, follows the BGM slider (cg_bgm), fades out over the last 0.9 s of the video so shorter videos cut it early ---- */
 const ultM=new Audio('assets/bgm/ultimate.mp3');ultM.preload='auto';
 function ultMStart(v){try{ultM.currentTime=0;ultM.volume=bgmVol();const p=ultM.play();if(p&&p.catch)p.catch(()=>{});v.ontimeupdate=()=>{const left=(v.duration||99)-v.currentTime;ultM.volume=bgmVol()*Math.max(0,Math.min(1,left/.9))}}catch(e){}}
 function ultMStop(){try{ultM.pause()}catch(e){}}
 /* ---- SFX: every effect is prepared with tools/prep_sfx.py (-14 LUFS, 4 dB louder than BGM) and ALL effects share ONE slider (cg_sfx); the three ultimate videos' audio is matched to -14 LUFS (tools/prep_video_audio.py) and also follows cg_sfx ---- */
-const SFX={ultimate:'assets/sfx/ultimate.mp3'};const sfxA={};
+const SFX={ultimate:'assets/sfx/ultimate.mp3',fist:'assets/sfx/fist.mp3',slap:'assets/sfx/slap.mp3',throw:'assets/sfx/throw.mp3',sword:'assets/sfx/sword.mp3',fastsword:'assets/sfx/fastsword.mp3',wand:'assets/sfx/wand.mp3',cast:'assets/sfx/cast.mp3',floatcast:'assets/sfx/floatcast.mp3',eat:'assets/sfx/eat.mp3',win:'assets/sfx/win.mp3',itemhit:'assets/sfx/itemhit.mp3',monhit:'assets/sfx/monhit.mp3',cathit:'assets/sfx/cathit.mp3',heal:'assets/sfx/heal.mp3',defeat:'assets/sfx/defeat.mp3',flee:'assets/sfx/flee.mp3'};
+/* SFXP = ms from the start of each trimmed file to its loudest moment (printed by tools/prep_sfx.py as peak_ms). sfxAt(k,hitMs) starts the file early enough that this moment lands exactly at hitMs after the animation started (the moment the damage number pops). */
+const SFXP={fist:165,slap:62,throw:893,sword:201,fastsword:194,wand:143,cast:142,floatcast:279,eat:188,monhit:408,itemhit:36};
+const SKSND={'Punch':'fist','High speed punch':'fist','Slap':'slap','Throw':'throw','Slash':'sword','Speed slash':'fastsword','Wand bash':'wand','Energy ball':'cast','Energy blast':'floatcast'}; /* ultimates have their own flash sound, so they are not listed */
+const sfxA={};if(USE_ASSETS)Object.keys(SFX).forEach(k=>{const a=new Audio(SFX[k]);a.preload='auto';sfxA[k]=a});
 const sfxVol=()=>Math.max(0,Math.min(1,ls.get('cg_sfx',70)/100));
-function sfxPlay(k){try{const a=sfxA[k]||(sfxA[k]=new Audio(SFX[k]));a.volume=sfxVol();a.currentTime=0;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+function sfxPlay(k,d){if(!USE_ASSETS)return;if(d>0)return setTimeout(()=>sfxPlay(k),d);try{const a=sfxA[k]||(sfxA[k]=new Audio(SFX[k]));a.volume=sfxVol();a.currentTime=0;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+const sfxAt=(k,hit)=>sfxPlay(k,Math.max(0,hit-(SFXP[k]||0)));
 const PAW='<svg class="paw" viewBox="0 0 64 64"><g fill="#e58fa8"><ellipse cx="32" cy="42" rx="14" ry="11"/><ellipse cx="13" cy="29" rx="6" ry="8"/><ellipse cx="25" cy="16" rx="6" ry="8.5"/><ellipse cx="40" cy="16" rx="6" ry="8.5"/><ellipse cx="52" cy="29" rx="6" ry="8"/></g></svg>';let sm_='';
 function ui(){document.documentElement.lang=lang;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));refreshMenu()}
 function show(i){document.querySelectorAll('.s').forEach(e=>e.classList.toggle('on',e.id==='s_'+i));bgmShow(i)}
@@ -645,26 +653,26 @@ function cm(k){const b=$('cb_menu');b.innerHTML='';const add=(x,fn,d)=>{const e=
  if(k==='main'){add('\u2694\uFE0F '+t('atk'),()=>act(SK()[0]));add('\uD83D\uDCD6 '+t('skl'),()=>cm('skl'));add('\uD83C\uDF92 '+t('bag'),()=>cm('bag'));add('\uD83C\uDFC3 '+t('flee'),flee)}
  else if(k==='skl'){allSk().forEach(s=>{const lk=0;add(`${s[0]} (${s[1]}MP)${lk?' Lv'+ultLv():''}`,()=>act(s),lk||S.mp<s[1])});add(t('back'),()=>cm('main'))}
  else{Object.keys(ITM).filter(k=>S.inv[k]).forEach(k=>add(`${ITM[k][0]} x${S.inv[k]}`,()=>use(k)));Object.keys(TL).filter(k=>S.tl[k]).forEach(k=>add(`${TL[k][0]} x${S.tl[k]} (${TL[k][2]})`,()=>useT(k)));add(t('back'),()=>cm('main'))}if(k!=='main')b.querySelectorAll('button').forEach(e=>{e.classList.add('sm');let f=1.15;while(e.scrollWidth>e.clientWidth+1&&f>.8){f-=.05;e.style.fontSize=f+'em'}if(e.scrollWidth>e.clientWidth+1){e.style.whiteSpace='normal';e.style.lineHeight='1'}})}
-function pop(txt,id,kind){const p=document.createElement('div');p.className='pop '+(kind||'hit');p.textContent=txt;const r=$(id),nm=r._nom||0;p.style.left=(r.offsetLeft+r.offsetWidth/2)+'px';p.style.top=(nm?r.offsetTop+r.offsetHeight-nm*.95:r.offsetTop+r.offsetHeight*.05)+'px';$('cb_st').appendChild(p);setTimeout(()=>p.remove(),2000);r.classList.remove('sh');void r.offsetWidth;r.classList.add('sh')}
+function pop(txt,id,kind){if(kind==='heal')sfxPlay('heal');else if(kind==='hurt')sfxPlay('cathit');const p=document.createElement('div');p.className='pop '+(kind||'hit');p.textContent=txt;const r=$(id),nm=r._nom||0;p.style.left=(r.offsetLeft+r.offsetWidth/2)+'px';p.style.top=(nm?r.offsetTop+r.offsetHeight-nm*.95:r.offsetTop+r.offsetHeight*.05)+'px';$('cb_st').appendChild(p);setTimeout(()=>p.remove(),2000);r.classList.remove('sh');void r.offsetWidth;r.classList.add('sh')}
 function act(s){if(busy)return;busy=true;S.mp-=s[1];cw=1;const c=$('cb_cov');c.style.display='flex';c.textContent='The cat girl uses '+s[0]+'!';
- const d=Math.round(ATK()*s[2]*(.9+Math.random()*.25)),go=()=>{E.hp-=d;pop(d,'cb_en');bars();cw=0;say([`The cat girl used ${s[0]}! ${d} damage to ${E.n}.`],()=>E.hp<=0?won():eTurn())};
- const an_=AN[s[0]]||'fist';cat.play(an_,()=>cat.play('idle'));setTimeout(()=>s[3]?flash(s[0],go):go(),s[3]?350:(HIT[an_]||600))}
+ const d=Math.round(ATK()*s[2]*(.9+Math.random()*.25)),kill=E.hp-d<=0,go=()=>{if(s[3]){sfxPlay('monhit');if(kill)sfxPlay('defeat',300)}E.hp-=d;pop(d,'cb_en');bars();cw=0;say([`The cat girl used ${s[0]}! ${d} damage to ${E.n}.`],()=>E.hp<=0?won():eTurn())};
+ const an_=AN[s[0]]||'fist',ht=HIT[an_]||600;cat.play(an_,()=>cat.play('idle'));if(!s[3]){if(SKSND[s[0]])sfxAt(SKSND[s[0]],ht);sfxAt('monhit',ht);if(kill)sfxPlay('defeat',ht+300)}setTimeout(()=>s[3]?flash(s[0],()=>{kill||bgmRelease();go()}):go(),s[3]?350:ht)}
 function say(a,cb){cq=a.slice();cqcb=cb;covNext()}
 function covNext(){if(cw)return;const c=$('cb_cov');if(cq.length){c.style.display='flex';c.textContent=cq.shift()+'   ▼'}else{c.style.display='none';const f=cqcb;cqcb=null;f&&f()}}
-function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.innerHTML='';f.classList.add('on');if(USE_ASSETS)sfxPlay('ultimate');
+function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.innerHTML='';f.classList.add('on');if(USE_ASSETS){sfxPlay('ultimate');bgmHold()}
  const end=()=>{if(dn++)return;ultMStop();f.style.background='#fff';const v=f.querySelector('video');if(v)v.style.opacity=0;setTimeout(()=>{f.classList.remove('on');f.innerHTML='';setTimeout(cb,300)},350)};
  if(USE_ASSETS&&VID[n]){const v=document.createElement('video');v.src=VID[n];v.playsInline=true;v.volume=sfxVol();v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .3s';f.appendChild(v);v.onended=end;v.onerror=end;v.addEventListener('playing',()=>ultMStart(v),{once:true});
   setTimeout(()=>{v.style.opacity=1;f.style.background='#000';v.play().catch(()=>{v.muted=true;v.play().catch(end)})},450);setTimeout(end,20000)}
  else{f.textContent='⚡ '+n+' ⚡';setTimeout(end,1300)}}
-function use(k){if(busy)return;busy=true;const i=ITM[k];S.inv[k]--;let m;if(i[2]){S.hp=Math.min(S.mhp,S.hp+i[2]);m='You hand the cat girl a '+i[0]+'. +'+i[2]+' HP.'}else{S.mp=Math.min(S.mmp,S.mp+i[3]);m='You hand the cat girl an '+i[0]+'. +'+i[3]+' MP.'}bars();pop('+'+(i[2]||i[3]),'cb_cat','heal');cat.play('eat',()=>cat.play('idle'));say([m],eTurn)}
-function useT(k){if(busy)return;busy=true;S.tl[k]--;const d=TL[k][2],c=$('cb_cov');cw=1;c.style.display='flex';c.textContent='The cat girl throws a '+TL[k][0]+'!';cat.play('throw',()=>cat.play('idle'));setTimeout(()=>{E.hp-=d;pop(d,'cb_en');bars();cw=0;say(['The '+TL[k][0]+' hits '+E.n+' for '+d+' damage.'],()=>E.hp<=0?won():eTurn())},650)}
-function flee(){if(busy)return;busy=true;if(E.boss)return say(['The cat girl refuses to run from a boss!'],eTurn);if(Math.random()<.6)say(['You tell the cat girl to retreat, and you get away!'],()=>explore());else say(['Could not escape!'],eTurn)}
+function use(k){if(busy)return;busy=true;const i=ITM[k];S.inv[k]--;let m;if(i[2]){S.hp=Math.min(S.mhp,S.hp+i[2]);m='You hand the cat girl a '+i[0]+'. +'+i[2]+' HP.'}else{S.mp=Math.min(S.mmp,S.mp+i[3]);m='You hand the cat girl an '+i[0]+'. +'+i[3]+' MP.'}bars();pop('+'+(i[2]||i[3]),'cb_cat','heal');cat.play('eat',()=>cat.play('idle'));sfxPlay('eat',300);say([m],eTurn)}
+function useT(k){if(busy)return;busy=true;S.tl[k]--;const d=TL[k][2],c=$('cb_cov');cw=1;c.style.display='flex';c.textContent='The cat girl throws a '+TL[k][0]+'!';cat.play('throw',()=>cat.play('idle'));sfxPlay('throw');sfxAt('itemhit',650);if(E.hp-d<=0)sfxPlay('defeat',950);setTimeout(()=>{E.hp-=d;pop(d,'cb_en');bars();cw=0;say(['The '+TL[k][0]+' hits '+E.n+' for '+d+' damage.'],()=>E.hp<=0?won():eTurn())},650)}
+function flee(){if(busy)return;busy=true;if(E.boss)return say(['The cat girl refuses to run from a boss!'],eTurn);if(Math.random()<.6){sfxPlay('flee');bgmStop();say(['You tell the cat girl to retreat, and you get away!'],()=>explore())}else say(['Could not escape!'],eTurn)}
 function eTurn(){const d=Math.max(1,Math.round(E.atk*(.85+Math.random()*.3)));S.hp-=d;pop(d,'cb_cat','hurt');bars();
- if(S.hp<=0){S.hp=0;bars();cat.play('cry');return say([`${E.n} hits the cat girl for ${d}.`,'The cat girl collapses...'],()=>{S.hp=S.mhp;ending(E.bad)})}
+ if(S.hp<=0){S.hp=0;bars();bgmStop();cat.play('cry');return say([`${E.n} hits the cat girl for ${d}.`,'The cat girl collapses...'],()=>{S.hp=S.mhp;ending(E.bad)})}
  say([`${E.n} hits the cat girl for ${d}.`],()=>{busy=false;cm('main')})}
 function won(){const ar=X.ar,xp=(5+ar*3)*(E.boss?5:1),g=4+ar*3+Math.floor(Math.random()*5)+(E.boss?40:0);S.xp+=xp;S.gold+=g;const L2=['Victory! '+E.n+' is defeated.',`Reward: ${xp} XP and ${g} gold.`];
  while(S.xp>=S.lvl*18){S.xp-=S.lvl*18;S.lvl++;S.mhp+=8;S.mmp+=3;S.hp=S.mhp;S.mp=S.mmp;L2.push(`Level up! The cat girl reached Lv${S.lvl}. HP, MP and ATK rose.`)}
- if(E.boss||Math.random()<.65){const pn=E.drop;S.parts[pn]=(S.parts[pn]||0)+1;L2.push('Dropped: '+pn+'.')}cat.play('win');say(L2,()=>{autosave();E.win?E.win():explore()})}
+ if(E.boss||Math.random()<.65){const pn=E.drop;S.parts[pn]=(S.parts[pn]||0)+1;L2.push('Dropped: '+pn+'.')}bgmStop();cat.play('win');sfxPlay('win');say(L2,()=>{autosave();E.win?E.win():explore()})}
 ui();
 
 /* keep every button label on one row: shrink the font if a label does not fit */
