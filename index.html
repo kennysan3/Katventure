@@ -169,9 +169,43 @@ button{white-space:nowrap}
 #ovb label select{grid-column:2 / 4}
 #ovb .vp{text-align:right;font-weight:900;font-variant-numeric:tabular-nums;color:#ffe9b8;text-shadow:none}
 #ovb.pink .vp{color:#8a5266}
+
+/* ===== build 19: bigger text + buttons, tighter message boxes, bigger combat stage ===== */
+/* combat: message box is one line tall (font shrinks to fit), stage takes the freed space */
+#cb_msg{min-height:0!important;height:calc(min(100vw,177.78vh)/62*2.5);flex-shrink:0;padding:.3em .8em;font-size:1.3em;line-height:1.25;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+#cb_msg.wrap{white-space:normal;font-size:.9em;line-height:1.1;padding:.1em .7em}
+#cb_cov{font-size:1.4em;line-height:1.3;overflow:auto}
+#cb_menu button{font-size:1.5em;line-height:1.1;padding:.1em .3em;white-space:normal;overflow:hidden;overflow-wrap:anywhere}
+#cb_menu button.sm{font-size:1.15em;padding:.05em .3em;white-space:nowrap}
+#cb_menu button .em{font-size:1.15em;margin-right:.25em}
+#cb_bot{height:8em;min-height:0!important;flex-shrink:0}
+#cb_menu{gap:.4em;grid-auto-rows:minmax(2em,1fr);overflow-y:auto;overscroll-behavior:contain;min-height:0}
+#cb_ph,#cb_eh{font-size:1.15em;font-weight:700;text-shadow:0 .08em .15em #000,0 0 .3em #000}
+#cb_st .bar{height:.8em;width:11em;border:.1em solid #0008}
+/* exploration: no message row, one huge Walk forward button, message overlays that button */
+#ex_bot{position:relative;flex:0 0 auto}
+#ex_fwd{display:block;width:100%;height:2.7em;font-size:2.3em!important;padding:.1em!important;border-radius:.45em;line-height:1.1}
+#ex_log{position:absolute;inset:0;display:none;align-items:center;min-height:0!important;padding:.3em .9em!important;font-size:1.45em!important;line-height:1.25;overflow:auto;z-index:3;cursor:pointer;border-radius:.45em}
+#ex_log.on{display:flex}
+#s_ex>.row:first-child button{font-size:1.5em!important;padding:.3em .8em!important}
+#ex_h{font-size:1.5em!important}
+#ex_hud{font-size:1.1em!important;padding:.1em .8em!important}
+/* visual novel: bigger text, choices bigger */
+#vn_box{height:6.7em;font-size:1.45em;line-height:1.3;padding:.4em .8em}
+#vn_box .who{font-size:1em}
+#vn_ch button{font-size:1.45em;line-height:1.2;white-space:normal;overflow-wrap:anywhere;padding:.45em .7em!important}
+/* map + menu buttons */
+#s_map>.row{gap:.5em .6em;padding:.4em .8em!important}
+#s_map>.row b{font-size:1.25em}
+#s_map>.row button{font-size:1.35em!important;padding:.3em .8em!important}
+#s_map>.row .hud{font-size:1em}
+#m_pts .pt:disabled{opacity:.75}
+.pt{width:3.2em!important;height:3.2em!important;font-size:1.3em}
+#ovb>button,#ovb>.row>button,#ovb .g2>button{font-size:1.2em}
+.pt small{font-size:.62em!important;padding:.1em .6em!important}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 18</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 21</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -186,12 +220,12 @@ button{white-space:nowrap}
 <div class="s" id="s_map"><svg id="m_svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></svg><div id="m_pts" style="position:absolute;inset:0"></div><canvas id="m_cat" style="position:absolute;transform:translate(-50%,-88%);pointer-events:none;z-index:1"></canvas>
 <div class="row" style="position:relative;z-index:3;background:#000a;border-radius:.6em;padding:.3em .6em;align-self:flex-start"><b data-i="map"></b><button id="m_story" data-i="story" onclick="setMode(0)"></button><button id="m_farm" data-i="farm" onclick="setMode(1)"></button><button data-i="menu" onclick="gmenu()"></button><span class="hud" id="m_hud"></span></div></div>
 <div class="s" id="s_ex"><div class="row" style="justify-content:space-between"><b id="ex_h"></b><span><button onclick="exMap()">🗺 Map</button> <button data-i="menu" onclick="gmenu()"></button></span></div><div class="hud" id="ex_hud"></div>
-<div class="stage" id="ex_st"><canvas class="spr" id="ex_cat" style="left:6%"></canvas></div><div class="box" id="ex_log"></div><button data-i="fwd" id="ex_fwd" onclick="fwd()" style="padding:16px"></button></div>
+<div class="stage" id="ex_st"><canvas class="spr" id="ex_cat" style="left:6%"></canvas></div><div id="ex_bot"><button data-i="fwd" id="ex_fwd" onclick="fwd()"></button><div class="box" id="ex_log"></div></div></div>
 
 <div class="s" id="s_cb"><div class="stage" id="cb_st"><canvas class="spr" id="cb_cat" style="left:2%"></canvas><div class="spr" id="cb_en" style="right:12%"></div>
 <div style="position:absolute;left:10px;top:10px"><div class="hud" id="cb_ph"></div><div class="bar"><i id="cb_pb" style="background:#43a047"></i></div></div>
 <div style="position:absolute;right:10px;top:10px;text-align:right"><div class="hud" id="cb_eh"></div><div class="bar" style="margin-left:auto"><i id="cb_eb"></i></div></div></div>
-<div class="box" id="cb_msg" style="min-height:60px"></div><div id="cb_bot" style="position:relative"><div class="g2" id="cb_menu"></div><div id="cb_cov" onclick="covNext()"></div></div></div>
+<div class="box" id="cb_msg"></div><div id="cb_bot" style="position:relative"><div class="g2" id="cb_menu"></div><div id="cb_cov" onclick="covNext()"></div></div></div>
 
 <div class="s c" id="s_end" style="padding:0"><img id="end_i" style="display:none"><div id="end_box"><h2 id="end_t"></h2><p id="end_d"></p><div id="end_n" class="hud"></div><button data-i="toMenu" onclick="show('menu');refreshMenu()"></button></div></div>
 
@@ -217,6 +251,10 @@ function bgmStop(){bgmWant=null;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
 function bgmShow(i){i==='menu'?bgmPlay('home'):bgmStop()}
 ['pointerdown','keydown','touchend'].forEach(e=>addEventListener(e,()=>{if(bgmWant&&bgmA.paused)bgmPlay(bgmWant)},true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmA.pause();else if(bgmWant)bgmPlay(bgmWant)});
+/* ---- ultimate video music (assets/bgm/ultimate.mp3, prepared with tools/prep_bgm.py): starts with the video, follows the BGM slider (cg_bgm), fades out over the last 0.9 s of the video so shorter videos cut it early ---- */
+const ultM=new Audio('assets/bgm/ultimate.mp3');ultM.preload='auto';
+function ultMStart(v){try{ultM.currentTime=0;ultM.volume=bgmVol();const p=ultM.play();if(p&&p.catch)p.catch(()=>{});v.ontimeupdate=()=>{const left=(v.duration||99)-v.currentTime;ultM.volume=bgmVol()*Math.max(0,Math.min(1,left/.9))}}catch(e){}}
+function ultMStop(){try{ultM.pause()}catch(e){}}
 /* ---- SFX: every effect is prepared with tools/prep_sfx.py (-14 LUFS, 4 dB louder than BGM) and ALL effects share ONE slider (cg_sfx); the three ultimate videos' audio is matched to -14 LUFS (tools/prep_video_audio.py) and also follows cg_sfx ---- */
 const SFX={ultimate:'assets/sfx/ultimate.mp3'};const sfxA={};
 const sfxVol=()=>Math.max(0,Math.min(1,ls.get('cg_sfx',70)/100));
@@ -444,7 +482,7 @@ function step(){if($('vn_ch').children.length)return;
   const l=Q[qi++];if(l.if&&!l.if())return step();if(l.end)return ending(l.end);if(l.fn){l.fn();return step()}if(l.ch)return showCh(l);
   $('vn_who').textContent=l.w==='c'?'Cat girl':l.w==='m'?S.name:'';
   $('vn_t').className=l.w==='k'?'mono':'';$('vn_t').textContent=(typeof l.t==='function'?l.t():l.t).replace(/\{name\}/g,S.name).replace(/\{cat\}/g,()=>nick()).replace(/\{Cat\}/g,()=>nick(1));
-  if(vnCat){const f=xFor(l);an.play(f,()=>an.play('idle'))}}
+  fitVN();if(vnCat){const f=xFor(l);an.play(f,()=>an.play('idle'))}}
 function showCh(l){const box=$('vn_ch'),seen=ls.get('cg_seen2',{}),done=ls.get('cg_end',[]);box.innerHTML='';box.style.display='grid';box.style.gap='.4em';box.style.gridTemplateColumns=l.ch.length>3?'1fr 1fr':'1fr';$('vn_who').textContent='';$('vn_t').textContent='';
   l.ch.forEach((c,i)=>{const b=document.createElement('button'),k=curL+'#'+i;if(seen[k]){b.className='seen';b.innerHTML=icon(c[4])}b.style.padding='.55em .8em';b.append(c[0]);
    if((c[3]||'').includes('l')&&!castleEnds.every(x=>done.includes(x))){b.disabled=true;b.append(' (locked)')}
@@ -501,9 +539,9 @@ function goPt(i){document.querySelectorAll('.pt').forEach(b=>b.disabled=true);co
 function setMode(m){fm=m;map()}
 function startStory(i){if(S.x&&S.x.ar===i&&!S.x.farm){X=S.x;return explore()}S.x=X=gen(i,0);vn('a'+i,explore)}
 function enterFarm(i){X=gen(i,1);explore()}
-function explore(){show('ex');const a=AR[X.ar];sz($('ex_cat'),.5);exBusy=0;$('ex_fwd').disabled=false;$('ex_cat').style.bottom=floorB($('ex_st'),X.ar);ecat.play(X.ar===4?'float':'idle');$('ex_st').style.background=bgs(X.ar);$('ex_h').textContent=`${a.n} · ${X.steps}/100${X.farm?' (farm)':''}`;$('ex_hud').textContent=hud()}
+function explore(){show('ex');$('ex_log').classList.remove('on');$('ex_log').onclick=null;const a=AR[X.ar];sz($('ex_cat'),.5);exBusy=0;$('ex_fwd').disabled=false;$('ex_cat').style.bottom=floorB($('ex_st'),X.ar);ecat.play(X.ar===4?'float':'idle');$('ex_st').style.background=bgs(X.ar);$('ex_h').textContent=`${a.n} · ${X.steps}/100${X.farm?' (farm)':''}`;$('ex_hud').textContent=hud()}
 function log(s){popup(s)}
-function popup(s,cb){explore();exBusy=1;$('ex_fwd').disabled=true;const l=$('ex_log');l.textContent=s+'   ▼';l.onclick=()=>{l.onclick=null;l.textContent='';exBusy=0;$('ex_fwd').disabled=false;cb?cb():autosave()}}
+function popup(s,cb){explore();exBusy=1;$('ex_fwd').disabled=true;const l=$('ex_log');l.textContent=s+'   ▼';l.classList.add('on');l.onclick=()=>{l.onclick=null;l.classList.remove('on');l.textContent='';exBusy=0;$('ex_fwd').disabled=false;cb?cb():autosave()}}
 function fwd(){if(exBusy)return;exBusy=1;$('ex_fwd').disabled=true;const tk_=++wk,sky=X.ar===4;ecat.play(sky?'fly':'walk');setTimeout(()=>{if(tk_!==wk)return;ecat.play(sky?'float':'idle');fwd2()},1100)}
 function fwd2(){X.steps++;S.mp=Math.min(S.mmp,S.mp+1);const s=X.steps;
   if(s>=100)return areaEnd();
@@ -570,15 +608,34 @@ function sellAllP(){let g=0,c=0;Object.keys(S.parts).forEach(n=>{const q=S.parts
 /* ---------- combat ---------- */
 function fight(boss,win){const ar=X.ar,dm=[.7,1,1.4][S.diff],mo=MN[K[ar]][boss?19:0],idx=boss?19:Math.floor(Math.random()*19),mm=MN[K[ar]][idx],at=AT[mm[2]]||[1,1];
   const hp=Math.round((14+ar*12+S.lvl*2)*(boss?boss.k:at[0])*dm);E={n:boss?boss.n:mm[0],e:'',mhp:hp,hp,atk:(3+ar*2.2)*dm*(boss?1.5:at[1]),boss:!!boss,win,bad:boss?boss.bad:'bad_mob',drop:mm[1]+' ('+ARL[ar]+')'};
-  show('cb');cl();$('cb_cov').style.display='none';cq=[];cw=0;$('cb_st').style.background=bgs(ar);sz($('cb_cat'),.5);$('cb_cat').style.bottom=$('cb_en').style.bottom=floorB($('cb_st'),ar);cat.play('idle');
-  const H=$('app').clientHeight,rs=MON[K[ar]][2];let hh;if(boss)hh=Math.round(H*.6);else{let mx=0;rs.slice(0,19).forEach(r=>mx=Math.max(mx,r[3]));hh=H*.3*Math.pow(rs[idx][3]/mx,.6);const w=rs[idx][2]/rs[idx][3]*hh,cap=$('cb_st').clientWidth*.22;if(w>cap)hh*=cap/w;hh=Math.round(hh)}
+  show('cb');cl();$('cb_cov').style.display='none';cq=[];cw=0;$('cb_st').style.background=bgs(ar);$('cb_cat').style.bottom=$('cb_en').style.bottom=floorB($('cb_st'),ar);cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main');const hh=cbLayout(ar,boss,idx);cat.play('idle');
   $('cb_en').innerHTML=monHtml(K[ar],idx,hh);busy=false;cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main')}
-const cmsg=s=>$('cb_msg').textContent=s;
+/* combat sizing: cat < every normal monster < boss; nothing reaches the HP labels */
+/* natural size of each monster, in cat-girl heights (cat = 1.0, humanoid). Armor knights are 1.15+, so she is always a bit smaller than any knight. First match wins. */
+const MSZ=[[/Dread|Doom|Black Knight|Magma Knight|Paladin/,1.22],[/Knight|Squire|Gilded Guard/,1.15],
+[/Sentinel/,1.8],[/Golem|Colossus/,1.7],[/Brute/,1.5],[/Ogre|Troll/,1.7],[/Treant Sapling/,.8],[/Treant/,1.5],[/Maiden/,1.15],[/Statue/,1.3],[/Gargoyle/,1.2],
+[/Slime Cluster/,.7],[/Slime|Ooze/,.42],[/Toadstool/,.55],[/Fly Agaric/,.6],[/Shroom Shaman/,.8],[/Spider|Widow/,.5],[/Bat Swarm/,.65],[/Bat/,.45],
+[/Ember Sprite|Fairy|Orb|Larva/,.4],[/Wisp/,.5],[/Doll/,.5],[/Fireball/,.55],[/Fire Spirit/,.6],[/Crowned Eye/,.7],[/Evil Eye/,.55],
+[/Imp/,.7],[/Goblin/,.8],[/Cave Mole/,.45],[/Mole/,.9],[/Beetle/,.6],[/Scorpion|Crab|Lizard/,.6],[/Centipede/,.7],[/Crawler/,.6],[/Fox/,.6],[/Cobra/,.7],
+[/Serpent|Worm/,1],[/Hellhound/,1.1],[/Wolf|Hound/,.85],[/Lycan/,1.4],[/Griffin/,1.4],[/Beast/,1.3],
+[/Skeleton|Automaton|Zombie|Witch|Cultist|Plague/,.95],[/Priest/,1],[/Wraith/,1.05],[/Shade/,1],[/Soot Ghost/,.8],[/Ghost/,1.1],[/Djinn/,1.3],[/Water Elemental/,1.1],[/Elemental/,1.2],
+[/Mimic/,.75],[/Thorn Vine/,.7],[/Vile Vine/,.9],[/Maneater/,1.3],[/Overgrowth/,1.2],[/Stone Fiend/,1],[/Eruption/,1.3],[/Devil/,1.3],[/Lesser Demon/,1]];
+const monScale=n=>{for(const[r,s]of MSZ)if(r.test(n))return s;return 1};
+function cbLayout(ar,boss,idx){const st=$('cb_st'),Hs=st.clientHeight,Ws=st.clientWidth,H=$('app').clientHeight,b=parseFloat(floorB(st,ar)),rs=MON[K[ar]][2];
+ const hud=Math.max($('cb_ph').parentElement.offsetHeight,$('cb_eh').parentElement.offsetHeight),avail=Math.max(60,Hs-b-(10+hud)-12),unit=avail*.47;
+ sz($('cb_cat'),unit/.9/H);
+ let hh;if(boss)hh=avail;else hh=Math.min(unit*monScale(E.n),avail*.86);
+ const w=rs[idx][2]/rs[idx][3]*hh,cap=Ws*(boss?.62:.36);if(w>cap)hh*=cap/w;
+ if(boss)hh=Math.max(hh,avail*.9);else if(monScale(E.n)>=1.1)hh=Math.max(hh,unit*1.1);hh=Math.round(Math.min(hh,avail));
+ $('cb_en').innerHTML=monHtml(K[ar],idx,hh);return hh}
+const cmsg=s=>{const m=$('cb_msg');m.textContent=s;fitMsg(m)};
+function fitMsg(m){m.classList.remove('wrap');m.style.fontSize='';if(!m.clientWidth)return;let f=1.3;while(m.scrollWidth>m.clientWidth+1&&f>1){f-=.05;m.style.fontSize=f+'em'}if(m.scrollWidth>m.clientWidth+1){m.style.fontSize='';m.classList.add('wrap')}}
+function fitVN(){const b=$('vn_box');b.style.fontSize='';let f=1.45;while(b.scrollHeight>b.clientHeight+1&&f>.95){f-=.05;b.style.fontSize=f+'em'}}
 function bars(){$('cb_ph').textContent=`Cat girl ${S.hp}/${S.mhp} · MP ${S.mp}`;$('cb_pb').style.width=Math.max(0,S.hp/S.mhp*100)+'%';$('cb_eh').textContent=`${E.n} · ATK ${Math.round(E.atk)} · ${Math.max(0,E.hp)}/${E.mhp}`;$('cb_eb').style.width=Math.max(0,E.hp/E.mhp*100)+'%'}
 function cm(k){const b=$('cb_menu');b.innerHTML='';const add=(x,fn,d)=>{const e=document.createElement('button');e.textContent=x;e.disabled=!!d;e.onclick=fn;b.appendChild(e)};
- if(k==='main'){add(t('atk'),()=>act(SK()[0]));add(t('skl'),()=>cm('skl'));add(t('bag'),()=>cm('bag'));add(t('flee'),flee)}
+ if(k==='main'){add('\u2694\uFE0F '+t('atk'),()=>act(SK()[0]));add('\uD83D\uDCD6 '+t('skl'),()=>cm('skl'));add('\uD83C\uDF92 '+t('bag'),()=>cm('bag'));add('\uD83C\uDFC3 '+t('flee'),flee)}
  else if(k==='skl'){allSk().forEach(s=>{const lk=0;add(`${s[0]} (${s[1]}MP)${lk?' Lv'+ultLv():''}`,()=>act(s),lk||S.mp<s[1])});add(t('back'),()=>cm('main'))}
- else{Object.keys(ITM).filter(k=>S.inv[k]).forEach(k=>add(`${ITM[k][0]} x${S.inv[k]}`,()=>use(k)));Object.keys(TL).filter(k=>S.tl[k]).forEach(k=>add(`${TL[k][0]} x${S.tl[k]} (${TL[k][2]})`,()=>useT(k)));add(t('back'),()=>cm('main'))}}
+ else{Object.keys(ITM).filter(k=>S.inv[k]).forEach(k=>add(`${ITM[k][0]} x${S.inv[k]}`,()=>use(k)));Object.keys(TL).filter(k=>S.tl[k]).forEach(k=>add(`${TL[k][0]} x${S.tl[k]} (${TL[k][2]})`,()=>useT(k)));add(t('back'),()=>cm('main'))}if(k!=='main')b.querySelectorAll('button').forEach(e=>{e.classList.add('sm');let f=1.15;while(e.scrollWidth>e.clientWidth+1&&f>.8){f-=.05;e.style.fontSize=f+'em'}if(e.scrollWidth>e.clientWidth+1){e.style.whiteSpace='normal';e.style.lineHeight='1'}})}
 function pop(txt,id,kind){const p=document.createElement('div');p.className='pop '+(kind||'hit');p.textContent=txt;const r=$(id),nm=r._nom||0;p.style.left=(r.offsetLeft+r.offsetWidth/2)+'px';p.style.top=(nm?r.offsetTop+r.offsetHeight-nm*.95:r.offsetTop+r.offsetHeight*.05)+'px';$('cb_st').appendChild(p);setTimeout(()=>p.remove(),2000);r.classList.remove('sh');void r.offsetWidth;r.classList.add('sh')}
 function act(s){if(busy)return;busy=true;S.mp-=s[1];cw=1;const c=$('cb_cov');c.style.display='flex';c.textContent='The cat girl uses '+s[0]+'!';
  const d=Math.round(ATK()*s[2]*(.9+Math.random()*.25)),go=()=>{E.hp-=d;pop(d,'cb_en');bars();cw=0;say([`The cat girl used ${s[0]}! ${d} damage to ${E.n}.`],()=>E.hp<=0?won():eTurn())};
@@ -586,8 +643,8 @@ function act(s){if(busy)return;busy=true;S.mp-=s[1];cw=1;const c=$('cb_cov');c.s
 function say(a,cb){cq=a.slice();cqcb=cb;covNext()}
 function covNext(){if(cw)return;const c=$('cb_cov');if(cq.length){c.style.display='flex';c.textContent=cq.shift()+'   ▼'}else{c.style.display='none';const f=cqcb;cqcb=null;f&&f()}}
 function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.innerHTML='';f.classList.add('on');if(USE_ASSETS)sfxPlay('ultimate');
- const end=()=>{if(dn++)return;f.style.background='#fff';const v=f.querySelector('video');if(v)v.style.opacity=0;setTimeout(()=>{f.classList.remove('on');f.innerHTML='';setTimeout(cb,300)},350)};
- if(USE_ASSETS&&VID[n]){const v=document.createElement('video');v.src=VID[n];v.playsInline=true;v.volume=sfxVol();v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .3s';f.appendChild(v);v.onended=end;v.onerror=end;
+ const end=()=>{if(dn++)return;ultMStop();f.style.background='#fff';const v=f.querySelector('video');if(v)v.style.opacity=0;setTimeout(()=>{f.classList.remove('on');f.innerHTML='';setTimeout(cb,300)},350)};
+ if(USE_ASSETS&&VID[n]){const v=document.createElement('video');v.src=VID[n];v.playsInline=true;v.volume=sfxVol();v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .3s';f.appendChild(v);v.onended=end;v.onerror=end;v.addEventListener('playing',()=>ultMStart(v),{once:true});
   setTimeout(()=>{v.style.opacity=1;f.style.background='#000';v.play().catch(()=>{v.muted=true;v.play().catch(end)})},450);setTimeout(end,20000)}
  else{f.textContent='⚡ '+n+' ⚡';setTimeout(end,1300)}}
 function use(k){if(busy)return;busy=true;const i=ITM[k];S.inv[k]--;let m;if(i[2]){S.hp=Math.min(S.mhp,S.hp+i[2]);m='You hand the cat girl a '+i[0]+'. +'+i[2]+' HP.'}else{S.mp=Math.min(S.mmp,S.mp+i[3]);m='You hand the cat girl an '+i[0]+'. +'+i[3]+' MP.'}bars();pop('+'+(i[2]||i[3]),'cb_cat','heal');cat.play('eat',()=>cat.play('idle'));say([m],eTurn)}
