@@ -144,9 +144,34 @@ button{white-space:nowrap}
 .srow button{padding:.3em .6em;flex-shrink:0;font-size:.9em}
 .cf{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5em;flex:1;text-align:center;font-size:1.1em}
 .cft{font-size:1.4em;font-weight:900;color:#ffe9b8}.cfb{justify-content:center;gap:.8em}
+
+/* ===== build 15: aligned settings rows ===== */
+#ovb label{display:grid;grid-template-columns:8.5em 1fr;align-items:center;gap:.8em;padding:.35em .7em;background:#2a130633;border:.12em solid #3a1f0a66;border-radius:.6em;font-weight:800;min-height:2.6em;box-sizing:border-box}
+#ovb label select,#ovb label input[type=range]{width:100%;min-width:0;margin:0;box-sizing:border-box}
+#ovb label select{padding:.3em .6em;font-size:1em}
+#ovb label input[type=range]{height:1.6em;cursor:pointer;accent-color:#ffd54f}
+#ovb.pink label{background:#fff9f5cc;border-color:#f0bccb}
+#ovb.pink label input[type=range]{accent-color:#e58fa8;color-scheme:light}
+
+/* custom slider look (wood + pink) */
+#ovb input[type=range]{-webkit-appearance:none;appearance:none;background:transparent}
+#ovb input[type=range]::-webkit-slider-runnable-track{height:.55em;border-radius:1em;background:#3b1f09;border:.1em solid #e8b87a88}
+#ovb input[type=range]::-moz-range-track{height:.55em;border-radius:1em;background:#3b1f09;border:.1em solid #e8b87a88}
+#ovb input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:1.4em;height:1.4em;margin-top:-.45em;border-radius:50%;background:#ffd54f;border:.15em solid #8a5a00;box-shadow:0 .1em .2em #0006}
+#ovb input[type=range]::-moz-range-thumb{width:1.1em;height:1.1em;border-radius:50%;background:#ffd54f;border:.15em solid #8a5a00;box-shadow:0 .1em .2em #0006}
+#ovb.pink input[type=range]::-webkit-slider-runnable-track{background:#f6d9e1;border-color:#f0bccb}
+#ovb.pink input[type=range]::-moz-range-track{background:#f6d9e1;border-color:#f0bccb}
+#ovb.pink input[type=range]::-webkit-slider-thumb{background:#e58fa8;border-color:#c2677f}
+#ovb.pink input[type=range]::-moz-range-thumb{background:#e58fa8;border-color:#c2677f}
+
+/* slider % readout */
+#ovb label{grid-template-columns:8.5em 1fr 3.4em}
+#ovb label select{grid-column:2 / 4}
+#ovb .vp{text-align:right;font-weight:900;font-variant-numeric:tabular-nums;color:#ffe9b8;text-shadow:none}
+#ovb.pink .vp{color:#8a5266}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 14</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 18</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -192,6 +217,10 @@ function bgmStop(){bgmWant=null;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
 function bgmShow(i){i==='menu'?bgmPlay('home'):bgmStop()}
 ['pointerdown','keydown','touchend'].forEach(e=>addEventListener(e,()=>{if(bgmWant&&bgmA.paused)bgmPlay(bgmWant)},true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)bgmA.pause();else if(bgmWant)bgmPlay(bgmWant)});
+/* ---- SFX: every effect is prepared with tools/prep_sfx.py (-14 LUFS, 4 dB louder than BGM) and ALL effects share ONE slider (cg_sfx); the three ultimate videos' audio is matched to -14 LUFS (tools/prep_video_audio.py) and also follows cg_sfx ---- */
+const SFX={ultimate:'assets/sfx/ultimate.mp3'};const sfxA={};
+const sfxVol=()=>Math.max(0,Math.min(1,ls.get('cg_sfx',70)/100));
+function sfxPlay(k){try{const a=sfxA[k]||(sfxA[k]=new Audio(SFX[k]));a.volume=sfxVol();a.currentTime=0;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
 const PAW='<svg class="paw" viewBox="0 0 64 64"><g fill="#e58fa8"><ellipse cx="32" cy="42" rx="14" ry="11"/><ellipse cx="13" cy="29" rx="6" ry="8"/><ellipse cx="25" cy="16" rx="6" ry="8.5"/><ellipse cx="40" cy="16" rx="6" ry="8.5"/><ellipse cx="52" cy="29" rx="6" ry="8"/></g></svg>';let sm_='';
 function ui(){document.documentElement.lang=lang;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));refreshMenu()}
 function show(i){document.querySelectorAll('.s').forEach(e=>e.classList.toggle('on',e.id==='s_'+i));bgmShow(i)}
@@ -443,7 +472,7 @@ function gmenu(x){mt=x||mt;const T=['items','status','save','load','settings'],t
   if(mt==='items')b=`<div class="hud">${hud()}</div><div class="row"><button ${it_==='c'?'style="outline:2px solid #ffb3d9"':''} onclick="it_='c';gmenu()">Consumables</button><button ${it_==='p'?'style="outline:2px solid #ffb3d9"':''} onclick="it_='p';gmenu()">Monster parts</button></div>`+(it_==='c'?(Object.keys(ITM).filter(k=>S.inv[k]).map(k=>`<button onclick="useI('${k}')">${ITM[k][0]} x${S.inv[k]} (+${ITM[k][2]?ITM[k][2]+' HP':ITM[k][3]+' MP'})</button>`).join('')+Object.keys(TL).filter(k=>S.tl[k]).map(k=>`<div class="hud">${TL[k][0]} x${S.tl[k]} (${TL[k][2]} damage, combat only)</div>`).join(''))||'<div class="hud">No snacks or potions yet, nya~</div>':(Object.keys(S.parts).filter(n=>S.parts[n]).map(n=>`<div style="font-size:1.5em;line-height:1.35;padding:.2em .1em;border-bottom:1px solid #ffffff22"><b>${n}</b> ×${S.parts[n]} <span style="opacity:.75;font-size:.75em">· sells for ${pp(n)}G each</span></div>`).join('')||'<div class="hud" style="font-size:1.2em">No monster parts yet, nya~ Defeat monsters to collect some, then sell them at a shop!</div>'));
   else if(mt==='status')b=`<div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div style="background:linear-gradient(${AR[Math.min(S.prog,6)].bg});border-radius:.6em;padding:.3em .3em 0;overflow:hidden"><canvas id="st_cv" style="display:block"></canvas></div><div style="flex:1;display:flex;flex-direction:column;gap:.35em"><b>Cat girl</b><div>Lv ${S.lvl} · XP ${S.xp}/${S.lvl*18}</div><div>HP ${S.hp}/${S.mhp} · MP ${S.mp}/${S.mmp}</div><div>ATK ${ATK()} (weapon ${wDef()[1]} + shop ${S.pa||0} + level ${S.lvl*2}) · Gold ${S.gold}</div><div>Partner: ${S.name} · Difficulty: ${dN(S)}</div><div>Weapons:</div>${[1,2,3,4].filter(c=>c<=S.wp).map(c=>`<div class="hud">${WN[c]}</div><div class="row">${Object.keys(S.own).filter(id=>+id[0]===c).sort().map(id=>{const w=WPN[c][+id.slice(2)];return`<button ${id===S.ew?'style="outline:2px solid #ffb3d9"':''} onclick="eqW('${id}')">${w[0]} (${w[1]})</button>`}).join('')}</div>`).join('')}<div class="hud">Skills: ${allSk().map(s=>s[0]).join(', ')}</div></div></div>`;
   else if(mt==='save'||mt==='load')b=slotsHtml(mt);
-  else b=`<label>Language <select onchange="lang=this.value;ls.set('cg_lang',lang);ui();gmenu('settings')">${['en','ja','zh'].map(l=>`<option ${l==lang?'selected':''}>${l}</option>`).join('')}</select></label><label>Volume <input type="range" value="${ls.get('cg_vol',70)}" oninput="ls.set('cg_vol',+this.value)"></label><label>BGM volume <input type="range" value="${ls.get('cg_bgm',70)}" oninput="ls.set('cg_bgm',+this.value);bgmSet()"></label><button onclick="cl();show('menu');refreshMenu()">${t('toMenu')}</button>`;
+  else b=`<label>Language <select onchange="lang=this.value;ls.set('cg_lang',lang);ui();gmenu('settings')">${['en','ja','zh'].map(l=>`<option ${l==lang?'selected':''}>${l}</option>`).join('')}</select></label><label>Sound effects <input type="range" value="${ls.get('cg_sfx',70)}" oninput="ls.set('cg_sfx',+this.value);this.nextElementSibling.textContent=this.value+'%'" onchange="sfxPlay('ultimate')"><span class="vp">${ls.get('cg_sfx',70)}%</span></label><label>BGM volume <input type="range" value="${ls.get('cg_bgm',70)}" oninput="ls.set('cg_bgm',+this.value);bgmSet();this.nextElementSibling.textContent=this.value+'%'"><span class="vp">${ls.get('cg_bgm',70)}%</span></label><button onclick="cl();show('menu');refreshMenu()">${t('toMenu')}</button>`;
   ov(`<div class="pawhd">${PAW}<span>Cat Girl's Menu</span>${PAW}</div><div class="g2" style="grid-template-columns:repeat(5,1fr)">${T.map(k=>`<button ${k==mt?'style="outline:2px solid #ffb3d9"':''} onclick="gmenu('${k}')">${tl[k]}</button>`).join('')}</div>${b}<button onclick="cl()">${t('close')}</button>`,1);$('ovb').classList.add('pink');
   if(mt==='status'){const c=$('st_cv');szA(c,.4);mkAn(c).play('idle')}}
 function useI(k){const i=ITM[k];if(!S.inv[k])return;S.inv[k]--;if(i[2])S.hp=Math.min(S.mhp,S.hp+i[2]);else S.mp=Math.min(S.mmp,S.mp+i[3]);gmenu('items')}
@@ -460,7 +489,7 @@ function seenG(p){const a=ls.get('cg_gal',[]);if(!a.includes(p)){a.push(p);ls.se
 function gallery(){const im=[];for(let i=1;i<=13;i++)im.push('story/story_'+String(i).padStart(2,'0'));['normal','angel','demon_lord','wedding','sad','bad','bad_mush','bad_cult','bad_swamp'].forEach(n=>im.push('endings/ending_'+n));K.forEach(k=>im.push('vn_backgrounds/vn_'+k));K.forEach((k,i)=>{im.push('events/mush_'+k,'events/mimic_'+k,'events/cult_'+k,'events/mimicbad_'+k);if(EVA.bridge.includes(i))im.push('events/bridge_'+k)});const sn=ls.get('cg_gal',[]);
  ov(`<h2>${t('gal')}</h2><div class="hud">${im.filter(p=>sn.includes(p)).length} / ${im.length} unlocked · tap a picture to enlarge · endings found ${ls.get('cg_end',[]).length} / ${Object.keys(EN).length}</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.5em">${im.map(p=>sn.includes(p)?`<img loading="lazy" src="assets/${p}.webp" style="width:100%;border-radius:.4em;cursor:pointer" onclick="big('${p}')">`:`<div style="aspect-ratio:16/9;background:#222;border-radius:.4em;display:flex;align-items:center;justify-content:center;font-size:2em;opacity:.6">🔒</div>`).join('')}</div><button onclick="cl()">${t('close')}</button>`,1)}
 function big(p){ov(`<img src="assets/${p}.webp" style="width:100%;border-radius:.5em"><button onclick="gallery()">${t('back')}</button>`,1)}
-function settings(){ov(`<h2>${t('set')}</h2><label>Language <select onchange="lang=this.value;ls.set('cg_lang',lang);ui();settings()">${['en','ja','zh'].map(l=>`<option ${l==lang?'selected':''}>${l}</option>`).join('')}</select></label><label>Volume <input type="range" value="${ls.get('cg_vol',70)}" oninput="ls.set('cg_vol',+this.value)"></label><label>BGM volume <input type="range" value="${ls.get('cg_bgm',70)}" oninput="ls.set('cg_bgm',+this.value);bgmSet()"></label><button onclick="if(confirm('Erase ALL saves and unlocked endings?')){localStorage.clear();refreshMenu();cl()}">Reset all data (testing)</button><button onclick="cl()">${t('close')}</button>`)}
+function settings(){ov(`<h2>${t('set')}</h2><label>Language <select onchange="lang=this.value;ls.set('cg_lang',lang);ui();settings()">${['en','ja','zh'].map(l=>`<option ${l==lang?'selected':''}>${l}</option>`).join('')}</select></label><label>Sound effects <input type="range" value="${ls.get('cg_sfx',70)}" oninput="ls.set('cg_sfx',+this.value);this.nextElementSibling.textContent=this.value+'%'" onchange="sfxPlay('ultimate')"><span class="vp">${ls.get('cg_sfx',70)}%</span></label><label>BGM volume <input type="range" value="${ls.get('cg_bgm',70)}" oninput="ls.set('cg_bgm',+this.value);bgmSet();this.nextElementSibling.textContent=this.value+'%'"><span class="vp">${ls.get('cg_bgm',70)}%</span></label><button onclick="if(confirm('Erase ALL saves and unlocked endings?')){localStorage.clear();refreshMenu();cl()}">Reset all data (testing)</button><button onclick="cl()">${t('close')}</button>`)}
 function exitG(){alert('Thanks for playing!');try{window.close()}catch(e){}}
 /* ---------- map / explore ---------- */
 function map(){wk++;ecat.play('idle');show('map');X=null;const sc=$('s_map');sc.style.background='url(assets/backgrounds/map_interactive.webp) center/100% 100%';$('m_hud').textContent=hud();$('m_story').style.outline=fm?'':'2px solid #ffb3d9';$('m_farm').style.outline=fm?'2px solid #ffb3d9':'';
@@ -556,9 +585,9 @@ function act(s){if(busy)return;busy=true;S.mp-=s[1];cw=1;const c=$('cb_cov');c.s
  const an_=AN[s[0]]||'fist';cat.play(an_,()=>cat.play('idle'));setTimeout(()=>s[3]?flash(s[0],go):go(),s[3]?350:(HIT[an_]||600))}
 function say(a,cb){cq=a.slice();cqcb=cb;covNext()}
 function covNext(){if(cw)return;const c=$('cb_cov');if(cq.length){c.style.display='flex';c.textContent=cq.shift()+'   ▼'}else{c.style.display='none';const f=cqcb;cqcb=null;f&&f()}}
-function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.innerHTML='';f.classList.add('on');
+function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.innerHTML='';f.classList.add('on');if(USE_ASSETS)sfxPlay('ultimate');
  const end=()=>{if(dn++)return;f.style.background='#fff';const v=f.querySelector('video');if(v)v.style.opacity=0;setTimeout(()=>{f.classList.remove('on');f.innerHTML='';setTimeout(cb,300)},350)};
- if(USE_ASSETS&&VID[n]){const v=document.createElement('video');v.src=VID[n];v.playsInline=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .3s';f.appendChild(v);v.onended=end;v.onerror=end;
+ if(USE_ASSETS&&VID[n]){const v=document.createElement('video');v.src=VID[n];v.playsInline=true;v.volume=sfxVol();v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .3s';f.appendChild(v);v.onended=end;v.onerror=end;
   setTimeout(()=>{v.style.opacity=1;f.style.background='#000';v.play().catch(()=>{v.muted=true;v.play().catch(end)})},450);setTimeout(end,20000)}
  else{f.textContent='⚡ '+n+' ⚡';setTimeout(end,1300)}}
 function use(k){if(busy)return;busy=true;const i=ITM[k];S.inv[k]--;let m;if(i[2]){S.hp=Math.min(S.mhp,S.hp+i[2]);m='You hand the cat girl a '+i[0]+'. +'+i[2]+' HP.'}else{S.mp=Math.min(S.mmp,S.mp+i[3]);m='You hand the cat girl an '+i[0]+'. +'+i[3]+' MP.'}bars();pop('+'+(i[2]||i[3]),'cb_cat','heal');cat.play('eat',()=>cat.play('idle'));say([m],eTurn)}
