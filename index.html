@@ -220,7 +220,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 26</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 29</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -257,15 +257,22 @@ ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',
 zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',save:'存档',load:'读档'}};
 const t=k=>L[lang][k]||L.en[k]||k;
 /* ---- BGM: every track is prepared with tools/prep_bgm.py (-18 LUFS, 96 kbps) and ALL tracks share ONE slider (cg_bgm) ---- */
-const BGM={home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3'};
-const bgmA=new Audio();bgmA.loop=true;bgmA.preload='auto';
-let bgmWant=null,bgmKey=null,bgmT=0,bgmHeld=false;
+const BGM={home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3'};
+/* AREA music: AREA_BGM[area index] = key in BGM. It plays in exploration and in every visual novel scene while an area is active (X set) and is NOT restarted when switching exploration <-> visual novel <-> choice selection; after a fight its position is resumed. Areas without an entry stay silent as before. Forest (0) is used by story AND farm mode. */
+const AREA_BGM=['forest','cave',null,null,null,'lava',null],bgmPos={}; /* index = AR order: Forest, Cave, Wasteland, Ruins, Sky fortress, Lavaland, Demon lord castle (null = no track yet, silent) */
+const bgmA=new Audio();bgmA.loop=true;bgmA.preload='auto';bgmA.onended=()=>{bgmWant=null}; /* the bad-ending track plays once and is not looped */
+let bgmWant=null,bgmKey=null,bgmT=0,bgmHeld=false,endBad=false;
 const bgmVol=()=>Math.max(0,Math.min(1,ls.get('cg_bgm',70)/100));
 function bgmSet(){clearInterval(bgmT);bgmA.volume=bgmVol()}
 function bgmFade(to,done){clearInterval(bgmT);bgmT=setInterval(()=>{const d=to-bgmA.volume;if(Math.abs(d)<.03){bgmA.volume=to;clearInterval(bgmT);done&&done()}else bgmA.volume=Math.max(0,Math.min(1,bgmA.volume+Math.sign(d)*.03))},40)}
-function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmKey=k;bgmA.src=BGM[k];bgmA.volume=0}const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});bgmFade(bgmVol())}
+function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmSave();bgmKey=k;bgmA.loop=k!=='bad';bgmA.src=BGM[k];bgmA.volume=0;const t=bgmPos[k];if(t)bgmA.addEventListener('loadedmetadata',()=>{try{bgmA.currentTime=t}catch(e){}},{once:true})}const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});bgmFade(bgmVol())}
 function bgmStop(){bgmWant=null;bgmHeld=false;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
-function bgmShow(i){if(i==='cb'){bgmKey=null;bgmHeld=false;bgmPlay(E&&E.boss?'boss':'battle')}else i==='menu'?bgmPlay('home'):i==='map'?bgmPlay('map'):bgmStop()}
+function bgmSave(){if(bgmKey&&AREA_BGM.includes(bgmKey))bgmPos[bgmKey]=bgmA.currentTime}
+function bgmShow(i){const ak=X&&AREA_BGM[X.ar];
+  if(i==='cb'){bgmSave();bgmKey=null;bgmHeld=false;bgmPlay(E&&E.boss?'boss':'battle')}
+  else if(i==='end'&&endBad){bgmSave();bgmKey=null;bgmHeld=false;bgmPlay('bad')}
+  else if((i==='ex'||i==='vn')&&ak)bgmPlay(ak);
+  else{if(i==='menu'||i==='map'||i==='end')for(const k in bgmPos)delete bgmPos[k];i==='menu'?bgmPlay('home'):i==='map'?bgmPlay('map'):bgmStop()}}
 /* combat music: battle (normal monsters) and boss; a fight starts the track from the beginning; it fades out when the monster dies, the cat girl falls or the player escapes (so the Win jingle is not masked) and is held (faded out, paused) while an ultimate video plays, because the ultimate has its own music */
 function bgmHold(){if(!bgmWant)return;bgmHeld=true;bgmFade(0,()=>{if(bgmHeld)bgmA.pause()})}
 function bgmRelease(){if(bgmHeld&&bgmWant){bgmHeld=false;bgmPlay(bgmWant)}}
@@ -516,6 +523,7 @@ function showCh(l){const box=$('vn_ch'),seen=ls.get('cg_seen2',{}),done=ls.get('
 function ending(id){const e=EN[id],u=ls.get('cg_end',[]);if(!u.includes(id)){u.push(id);ls.set('cg_end',u)}ls.set('cg_plays',ls.get('cg_plays',0)+1);
   let d=e[1];if(id==='wedding')d=S.g==='f'?'You slip on the wedding ring and, in a flash of magic, turn into a man. The cat girl cheers: you are her husband now! Nya!':'You slip on the wedding ring. The cat girl cheers, and the two of you get married. Nya!';
   $('end_t').textContent=e[0];const im=$('end_i');im.style.display='';im.onerror=()=>im.style.display='none';const ep=endP(id);im.src='assets/'+ep+'.webp';seenG(ep);$('end_d').textContent=d;$('end_n').textContent=u.length+' / '+Object.keys(EN).length+' endings found';
+  endBad=id.startsWith('bad');
   if(e[2]){for(let i=1;i<=99;i++)ls.del('cg_s'+i);ls.set('cg_s0',{fresh:1,ng:1,name:'New Game+'});S=null;X=null}
   show('end')}
 /* ---------- menus ---------- */
