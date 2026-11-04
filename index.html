@@ -220,7 +220,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 34</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 37</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -257,7 +257,7 @@ ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',
 zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',save:'存档',load:'读档'}};
 const t=k=>L[lang][k]||L.en[k]||k;
 /* ---- BGM: every track is prepared with tools/prep_bgm.py (-18 LUFS, 96 kbps) and ALL tracks share ONE slider (cg_bgm) ---- */
-const BGM={home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3',wasteland:'assets/bgm/wasteland.mp3',ruins:'assets/bgm/ruins.mp3',sky:'assets/bgm/sky.mp3',demon:'assets/bgm/demon.mp3'};
+const BGM={shop:'assets/bgm/shop.mp3',home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3',wasteland:'assets/bgm/wasteland.mp3',ruins:'assets/bgm/ruins.mp3',sky:'assets/bgm/sky.mp3',demon:'assets/bgm/demon.mp3'};
 /* AREA music: AREA_BGM[area index] = key in BGM. It plays in exploration and in every visual novel scene while an area is active (X set) and is NOT restarted when switching exploration <-> visual novel <-> choice selection; after a fight its position is resumed. Areas without an entry stay silent as before. Forest (0) is used by story AND farm mode. */
 const AREA_BGM=['forest','cave','wasteland','ruins','sky','lava','demon'],bgmPos={}; /* index = AR order: Forest, Cave, Wasteland, Ruins, Sky fortress, Lavaland, Demon lord castle (null = no track, silent). All 7 areas have a track now. The Demon lord castle BOSS fight uses the castle track as its combat music (starts from the beginning when the fight starts) instead of boss.mp3 */
 const bgmA=new Audio();bgmA.loop=true;bgmA.preload='auto';bgmA.onended=()=>{bgmWant=null}; /* the bad-ending track plays once and is not looped */
@@ -283,13 +283,15 @@ const ultM=new Audio('assets/bgm/ultimate.mp3');ultM.preload='auto';
 function ultMStart(v){try{ultM.currentTime=0;ultM.volume=bgmVol();const p=ultM.play();if(p&&p.catch)p.catch(()=>{});v.ontimeupdate=()=>{const left=(v.duration||99)-v.currentTime;ultM.volume=bgmVol()*Math.max(0,Math.min(1,left/.9))}}catch(e){}}
 function ultMStop(){try{ultM.pause()}catch(e){}}
 /* ---- SFX: every effect is prepared with tools/prep_sfx.py (-14 LUFS, 4 dB louder than BGM) and ALL effects share ONE slider (cg_sfx); the three ultimate videos' audio is matched to -14 LUFS (tools/prep_video_audio.py) and also follows cg_sfx ---- */
-const SFX={ultimate:'assets/sfx/ultimate.mp3',fist:'assets/sfx/fist.mp3',slap:'assets/sfx/slap.mp3',throw:'assets/sfx/throw.mp3',sword:'assets/sfx/sword.mp3',fastsword:'assets/sfx/fastsword.mp3',wand:'assets/sfx/wand.mp3',cast:'assets/sfx/cast.mp3',floatcast:'assets/sfx/floatcast.mp3',eat:'assets/sfx/eat.mp3',win:'assets/sfx/win.mp3',itemhit:'assets/sfx/itemhit.mp3',monhit:'assets/sfx/monhit.mp3',cathit:'assets/sfx/cathit.mp3',heal:'assets/sfx/heal.mp3',defeat:'assets/sfx/defeat.mp3',flee:'assets/sfx/flee.mp3'};
+const SFX={click:'assets/sfx/click.mp3',shopin:'assets/sfx/shopin.mp3',sold:'assets/sfx/sold.mp3',bought:'assets/sfx/bought.mp3',ultimate:'assets/sfx/ultimate.mp3',fist:'assets/sfx/fist.mp3',slap:'assets/sfx/slap.mp3',throw:'assets/sfx/throw.mp3',sword:'assets/sfx/sword.mp3',fastsword:'assets/sfx/fastsword.mp3',wand:'assets/sfx/wand.mp3',cast:'assets/sfx/cast.mp3',floatcast:'assets/sfx/floatcast.mp3',eat:'assets/sfx/eat.mp3',win:'assets/sfx/win.mp3',itemhit:'assets/sfx/itemhit.mp3',monhit:'assets/sfx/monhit.mp3',cathit:'assets/sfx/cathit.mp3',heal:'assets/sfx/heal.mp3',defeat:'assets/sfx/defeat.mp3',flee:'assets/sfx/flee.mp3'};
 /* SFXP = ms from the start of each trimmed file to its loudest moment (printed by tools/prep_sfx.py as peak_ms). sfxAt(k,hitMs) starts the file early enough that this moment lands exactly at hitMs after the animation started (the moment the damage number pops). */
 const SFXP={fist:165,slap:62,throw:893,sword:201,fastsword:194,wand:143,cast:142,floatcast:279,eat:188,monhit:408,itemhit:36};
 const SKSND={'Punch':'fist','High speed punch':'fist','Slap':'slap','Throw':'throw','Slash':'sword','Speed slash':'fastsword','Wand bash':'wand','Energy ball':'cast','Energy blast':'floatcast'}; /* ultimates have their own flash sound, so they are not listed */
 const sfxA={};if(USE_ASSETS)Object.keys(SFX).forEach(k=>{const a=new Audio(SFX[k]);a.preload='auto';sfxA[k]=a});
 const sfxVol=()=>Math.max(0,Math.min(1,ls.get('cg_sfx',70)/100));
 function sfxPlay(k,d){if(!USE_ASSETS)return;if(d>0)return setTimeout(()=>sfxPlay(k),d);try{const a=sfxA[k]||(sfxA[k]=new Audio(SFX[k]));a.volume=sfxVol();a.currentTime=0;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+/* every <button> (and only buttons) plays the click sound; capture phase so buttons that stop propagation still click; disabled buttons never fire */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&!b.disabled)sfxPlay('click')},true);
 const sfxAt=(k,hit)=>sfxPlay(k,Math.max(0,hit-(SFXP[k]||0)));
 const PAW='<svg class="paw" viewBox="0 0 64 64"><g fill="#e58fa8"><ellipse cx="32" cy="42" rx="14" ry="11"/><ellipse cx="13" cy="29" rx="6" ry="8"/><ellipse cx="25" cy="16" rx="6" ry="8.5"/><ellipse cx="40" cy="16" rx="6" ry="8.5"/><ellipse cx="52" cy="29" rx="6" ry="8"/></g></svg>';let sm_='';
 function ui(){document.documentElement.lang=lang;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));refreshMenu()}
@@ -721,14 +723,14 @@ const SKI={welcome:'welcome',bye:'welcome',ask:'ask',sellmenu:'ask',tools:'tools
 let sk_={i:'welcome',t:''},sc_=null,shT=0,shCl=0;
 function shSay(k,o){o=o||{};let t=rp(SKT[k]);if(o.v)t=t.replace('{g}',o.v.g).replace('{x}',o.v.x);sk_={i:o.img||SKI[k],t:t+(o.extra||'')};clearTimeout(shT);if(['sell1','sellall','paid','poor'].includes(k))shT=setTimeout(()=>{if($('shk_i')&&!shCl){shSay('ask');paintK()}},7000)}
 function paintK(){const i=$('shk_i'),m=$('shk_m');if(i)i.src='assets/shop/shop_'+sk_.i+'.webp';if(m)m.textContent=sk_.t}
-function openShop(){['welcome','ask','tools','weapons','sell1','sellall','paid'].forEach(n=>{new Image().src='assets/shop/shop_'+n+'.webp'});sh_='buy';sc_=null;shCl=0;shSay('welcome');shop()}
+function openShop(){['welcome','ask','tools','weapons','sell1','sellall','paid'].forEach(n=>{new Image().src='assets/shop/shop_'+n+'.webp'});sh_='buy';sc_=null;shCl=0;shSay('welcome');sfxPlay('shopin');bgmPlay('shop');shop()}
 function shopTab(x){sh_=x;sc_=null;shSay(x==='buy'?'tools':x==='wpn'?'weapons':'sellmenu');shop()}
 function closeShop(){if(shCl)return;shCl=1;clearTimeout(shT);shSay('bye');paintK();$('ovb').classList.add('lock');setTimeout(()=>{shCl=0;cl();explore()},1100)}
 const PERK=[['Attack +2',120],['Max HP +10',100],['Max MP +4',100]];
 function cfInfo(c){if(c.k==='i'){const d=ITM[c.id];return{name:d[0]+(c.n>1?' x'+c.n:''),cost:d[1]*c.n}}if(c.k==='t'){const d=TL[c.id];return{name:d[0]+(c.n>1?' x'+c.n:''),cost:d[1]*c.n}}if(c.k==='p'){const d=PERK[c.id];return{name:d[0]+(c.n>1?' x'+c.n:''),cost:d[1]*c.n}}const w=WPN[c.id[0]][+c.id.slice(2)];return{name:w[0],cost:w[2]}}
 function askBuy(k,id,n){const c={k,id,n},f=cfInfo(c);if(S.gold<f.cost){shSay('poor');return shop()}sc_=c;shSay('confirm',{img:sh_==='wpn'?'weapons':'tools',v:{g:f.cost,x:f.name}});shop()}
 function cancelBuy(){sc_=null;shSay('ask');shop()}
-function doBuy(){const c=sc_;if(!c)return;const f=cfInfo(c);if(S.gold<f.cost)return cancelBuy();S.gold-=f.cost;if(c.k==='i')addI(c.id,c.n);else if(c.k==='t')S.tl[c.id]=(S.tl[c.id]||0)+c.n;else if(c.k==='p'){const n=c.n;if(c.id==0)S.pa=(S.pa||0)+2*n;else if(c.id==1){S.mhp+=10*n;S.hp+=10*n}else{S.mmp+=4*n;S.mp+=4*n}}else S.own[c.id]=1;sc_=null;shSay('paid',{extra:` (-${f.cost}G)`});shop()}
+function doBuy(){const c=sc_;if(!c)return;const f=cfInfo(c);if(S.gold<f.cost)return cancelBuy();S.gold-=f.cost;sfxPlay('bought');if(c.k==='i')addI(c.id,c.n);else if(c.k==='t')S.tl[c.id]=(S.tl[c.id]||0)+c.n;else if(c.k==='p'){const n=c.n;if(c.id==0)S.pa=(S.pa||0)+2*n;else if(c.id==1){S.mhp+=10*n;S.hp+=10*n}else{S.mmp+=4*n;S.mp+=4*n}}else S.own[c.id]=1;sc_=null;shSay('paid',{extra:` (-${f.cost}G)`});shop()}
 const bRow=(name,desc,k,id,u,multi)=>`<div class="srow"><div class="sn"><b>${name}</b><small>${desc}</small></div>${sBtn('Buy 1 · '+u+'G',u,`askBuy('${k}','${id}',1)`)}${multi?sBtn('Buy 10 · '+u*10+'G',u*10,`askBuy('${k}','${id}',10)`):''}</div>`;
 const sRow=(name,q,u,k,id)=>{const e=encodeURIComponent(id);return`<div class="srow"><div class="sn"><b>${name} x${q}</b><small>${u}G each</small></div><button onclick="sell('${k}','${e}',1)">Sell 1 · ${u}G</button>${q>=10?`<button onclick="sell('${k}','${e}',10)">Sell 10 · ${u*10}G</button>`:''}${q>1&&q!==10?`<button class="gold" onclick="sell('${k}','${e}',${q})">Sell all · ${u*q}G</button>`:''}</div>`};
 function shop(){let b='';
@@ -738,9 +740,9 @@ function shop(){let b='';
  else b=sAll()+(Object.keys(ITM).filter(k=>S.inv[k]).map(k=>sRow(ITM[k][0],S.inv[k],ITM[k][1]>>1,'i',k)).join('')+Object.keys(S.parts).filter(n=>S.parts[n]).map(n=>sRow(n,S.parts[n],pp(n),'p',n)).join(''))||'<div class="hud">Nothing to sell yet, nya~</div>';
  const on=x=>sh_===x?' style="outline:2px solid #ffd54f"':'';
  ov(`<h2>🐟 Meow Shop · ${S.gold}G</h2><div class="shw"><div class="shk"><img id="shk_i" src="assets/shop/shop_${sk_.i}.webp" alt=""><div class="shm" id="shk_m">${sk_.t}</div></div><div class="shl"><div class="row"><button${on('buy')} onclick="shopTab('buy')">Tools</button><button${on('wpn')} onclick="shopTab('wpn')">Weapons</button><button${on('sell')} onclick="shopTab('sell')">Sell</button></div><div class="sls">${b}</div></div></div><button onclick="closeShop()">${t('close')}</button>`,1);$('ovb').classList.add('shop')}
-function sell(k,e,n){const id=decodeURIComponent(e);let g;if(k==='i'){g=(ITM[id][1]>>1)*n;S.inv[id]-=n}else{g=pp(id)*n;S.parts[id]-=n}S.gold+=g;shSay(n===1?'sell1':'sellall',{extra:` (+${g}G)`});shop()}
+function sell(k,e,n){const id=decodeURIComponent(e);let g;if(k==='i'){g=(ITM[id][1]>>1)*n;S.inv[id]-=n}else{g=pp(id)*n;S.parts[id]-=n}S.gold+=g;sfxPlay('sold');shSay(n===1?'sell1':'sellall',{extra:` (+${g}G)`});shop()}
 function sAll(){const pn=Object.keys(S.parts).filter(n=>S.parts[n]);if(!pn.length)return'';return`<button class="gold" style="flex-shrink:0" onclick="sellAllP()">🐾 Sell ALL monster parts (${pn.reduce((a,n)=>a+S.parts[n],0)} pcs) · +${pn.reduce((a,n)=>a+S.parts[n]*pp(n),0)}G</button>`}
-function sellAllP(){let g=0,c=0;Object.keys(S.parts).forEach(n=>{const q=S.parts[n]||0;g+=q*pp(n);c+=q});if(!c)return;S.parts={};S.gold+=g;shSay('sellall',{extra:` (+${g}G)`});shop()}
+function sellAllP(){let g=0,c=0;Object.keys(S.parts).forEach(n=>{const q=S.parts[n]||0;g+=q*pp(n);c+=q});if(!c)return;S.parts={};S.gold+=g;sfxPlay('sold');shSay('sellall',{extra:` (+${g}G)`});shop()}
 /* ---------- combat ---------- */
 function fight(boss,win){const ar=X.ar,dm=[.7,1,1.4][S.diff],mo=MN[K[ar]][boss?19:0],idx=boss?19:Math.floor(Math.random()*19),mm=MN[K[ar]][idx],at=AT[mm[2]]||[1,1];
   const hp=Math.round((14+ar*12+S.lvl*2)*(boss?boss.k:at[0])*dm);E={n:boss?boss.n:mm[0],e:'',mhp:hp,hp,atk:(3+ar*2.2)*dm*(boss?1.5:at[1]),boss:!!boss,win,bad:boss?boss.bad:'bad_mob',drop:mm[1]+' ('+ARL[ar]+')'};
