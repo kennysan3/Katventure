@@ -220,7 +220,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 46</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 47</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -257,7 +257,9 @@ ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',
 zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',save:'存档',load:'读档'}};
 const t=k=>L[lang][k]||L.en[k]||k;
 /* ---- BGM: every track is prepared with tools/prep_bgm.py (-18 LUFS, 96 kbps) and ALL tracks share ONE slider (cg_bgm) ---- */
-const BGM={shop:'assets/bgm/shop.mp3',home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3',wasteland:'assets/bgm/wasteland.mp3',ruins:'assets/bgm/ruins.mp3',sky:'assets/bgm/sky.mp3',demon:'assets/bgm/demon.mp3'};
+const BGM={shop:'assets/bgm/shop.mp3',home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3',wasteland:'assets/bgm/wasteland.mp3',ruins:'assets/bgm/ruins.mp3',sky:'assets/bgm/sky.mp3',demon:'assets/bgm/demon.mp3',end_demon:'assets/bgm/end_demon.mp3',end_angel:'assets/bgm/end_angel.mp3',end_wedding:'assets/bgm/end_wedding.mp3'};
+/* ENDING music (build 47): after the player picks the final object in the Demon lord castle, the ending's own track plays through the ending visual novel and the ending screen (looped, keeps playing between them). normal = forest track, sad = home screen track, angel/demon/wedding = their own tracks. endBgm is cleared as soon as any other screen shows. */
+const ENDBG={normal:'forest',angel:'end_angel',demon:'end_demon',sad:'home',wedding:'end_wedding'};let endBgm=null;
 /* AREA music: AREA_BGM[area index] = key in BGM. It plays in exploration and in every visual novel scene while an area is active (X set) and is NOT restarted when switching exploration <-> visual novel <-> choice selection; after a fight its position is resumed. Areas without an entry stay silent as before. Forest (0) is used by story AND farm mode. */
 const AREA_BGM=['forest','cave','wasteland','ruins','sky','lava','demon'],bgmPos={}; /* index = AR order: Forest, Cave, Wasteland, Ruins, Sky fortress, Lavaland, Demon lord castle (null = no track, silent). All 7 areas have a track now. The Demon lord castle BOSS fight uses the castle track as its combat music (starts from the beginning when the fight starts) instead of boss.mp3 */
 const bgmA=new Audio();bgmA.loop=true;bgmA.preload='auto';bgmA.onended=()=>{bgmWant=null}; /* the bad-ending track plays once and is not looped */
@@ -269,6 +271,8 @@ function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmSave();bgmKey=k;bgmA.loop=k!=='b
 function bgmStop(){bgmWant=null;bgmHeld=false;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
 function bgmSave(){if(bgmKey&&AREA_BGM.includes(bgmKey))bgmPos[bgmKey]=bgmA.currentTime}
 function bgmShow(i){const ak=X&&AREA_BGM[X.ar];
+  if(endBgm&&(i==='vn'||i==='end')){bgmHeld=false;bgmPlay(endBgm);return}
+  if(i!=='vn'&&i!=='end')endBgm=null;
   if(i==='cb'){bgmHeld=false;if(E&&E.boss&&X&&X.ar===6&&AREA_BGM[6]){bgmKey=null;delete bgmPos[AREA_BGM[6]];bgmPlay(AREA_BGM[6])}else{bgmSave();bgmKey=null;bgmPlay(E&&E.boss?'boss':'battle')}}
   else if(i==='end'&&endBad){bgmSave();bgmKey=null;bgmHeld=false;bgmPlay('bad')}
   else if((i==='ex'||i==='vn')&&ak)bgmPlay(ak);
@@ -721,7 +725,7 @@ function tierVar(l){const T=tierN();if(!T||(l.w!=='m'&&l.w!=='c')||typeof l.t!==
 function tierMix(k,a){const T=tierN();if(!T||/^(end_|intro$|loot$)/.test(k))return a;const rnd=seedR(k+':'+T),pr=[0,.3,.45,.6,.75,.9][T],out=a.slice(),ok=i=>{const o=a[i];return o&&typeof o.t==='string'&&!o.if&&!o.fn&&!o.end&&!o.ch},el=a.map((_,i)=>i).filter(ok);if(!el.length)return a;const ins=[];
  [[PAS,'m'],[CAS,'c']].forEach(([pool,w])=>{if(rnd()<pr){const hi=Math.min(pool.length,4*T),lo=Math.max(0,hi-8),txt=pool[lo+Math.floor(rnd()*(hi-lo))],at=el[Math.floor(rnd()*el.length)];ins.push([at,P(txt.slice(2).split(/ (?=\[\w+\])/).map(s=>txt[0]+':'+s))])}});
  ins.sort((x,y)=>y[0]-x[0]).forEach(([at,o])=>out.splice(at+1,0,...o));return out}
-function endGo(id){const l='end_'+id;if(SC[l])vn(l);else ending(id)}
+function endGo(id){const l='end_'+id;endBgm=ENDBG[id]||null;if(endBgm){delete bgmPos[endBgm];bgmHeld=false;bgmPlay(endBgm)}if(SC[l])vn(l);else ending(id)}
 function ending(id){const e=EN[id],u=ls.get('cg_end',[]);if(e[2]&&!allCast(u))ls.set('cg_runs',runsN(u)+1);if(!u.includes(id)){u.push(id);ls.set('cg_end',u)}ls.set('cg_plays',ls.get('cg_plays',0)+1);
   let d=e[1];if(id==='wedding')d=(S.g==='f'?'You slip on the wedding ring and, in a flash of magic, turn into a man. ':'You slip on the wedding ring. ')+'The cat girl cheers, you ascend to godhood together, and you live happily ever after in a small hut in the forest where you met, with five children. Nya!';
   $('end_t').textContent=e[0];const im=$('end_i');im.style.display='';im.onerror=()=>im.style.display='none';const ep=endP(id);im.src='assets/'+ep+'.webp';seenG(ep);$('end_d').textContent=d;$('end_n').textContent=u.length+' / '+Object.keys(EN).length+' endings found';
