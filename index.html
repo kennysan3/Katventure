@@ -220,7 +220,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 42</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 45</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -283,7 +283,7 @@ const ultM=new Audio('assets/bgm/ultimate.mp3');ultM.preload='auto';
 function ultMStart(v){try{ultM.currentTime=0;ultM.volume=bgmVol();const p=ultM.play();if(p&&p.catch)p.catch(()=>{});v.ontimeupdate=()=>{const left=(v.duration||99)-v.currentTime;ultM.volume=bgmVol()*Math.max(0,Math.min(1,left/.9))}}catch(e){}}
 function ultMStop(){try{ultM.pause()}catch(e){}}
 /* ---- SFX: every effect is prepared with tools/prep_sfx.py (-14 LUFS, 4 dB louder than BGM) and ALL effects share ONE slider (cg_sfx); the three ultimate videos' audio is matched to -14 LUFS (tools/prep_video_audio.py) and also follows cg_sfx ---- */
-const SFX={click:'assets/sfx/click.mp3',shopin:'assets/sfx/shopin.mp3',sold:'assets/sfx/sold.mp3',bought:'assets/sfx/bought.mp3',ultimate:'assets/sfx/ultimate.mp3',fist:'assets/sfx/fist.mp3',slap:'assets/sfx/slap.mp3',throw:'assets/sfx/throw.mp3',sword:'assets/sfx/sword.mp3',fastsword:'assets/sfx/fastsword.mp3',wand:'assets/sfx/wand.mp3',cast:'assets/sfx/cast.mp3',floatcast:'assets/sfx/floatcast.mp3',eat:'assets/sfx/eat.mp3',win:'assets/sfx/win.mp3',itemhit:'assets/sfx/itemhit.mp3',monhit:'assets/sfx/monhit.mp3',cathit:'assets/sfx/cathit.mp3',heal:'assets/sfx/heal.mp3',defeat:'assets/sfx/defeat.mp3',flee:'assets/sfx/flee.mp3'};
+const SFX={click:'assets/sfx/click.mp3',shopin:'assets/sfx/shopin.mp3',encounter:'assets/sfx/encounter.mp3',sold:'assets/sfx/sold.mp3',bought:'assets/sfx/bought.mp3',ultimate:'assets/sfx/ultimate.mp3',fist:'assets/sfx/fist.mp3',slap:'assets/sfx/slap.mp3',throw:'assets/sfx/throw.mp3',sword:'assets/sfx/sword.mp3',fastsword:'assets/sfx/fastsword.mp3',wand:'assets/sfx/wand.mp3',cast:'assets/sfx/cast.mp3',floatcast:'assets/sfx/floatcast.mp3',eat:'assets/sfx/eat.mp3',win:'assets/sfx/win.mp3',itemhit:'assets/sfx/itemhit.mp3',monhit:'assets/sfx/monhit.mp3',cathit:'assets/sfx/cathit.mp3',heal:'assets/sfx/heal.mp3',defeat:'assets/sfx/defeat.mp3',flee:'assets/sfx/flee.mp3'};
 /* SFXP = ms from the start of each trimmed file to its loudest moment (printed by tools/prep_sfx.py as peak_ms). sfxAt(k,hitMs) starts the file early enough that this moment lands exactly at hitMs after the animation started (the moment the damage number pops). */
 const SFXP={fist:165,slap:62,throw:893,sword:201,fastsword:194,wand:143,cast:142,floatcast:279,eat:188,monhit:408,itemhit:36};
 const SKSND={'Punch':'fist','High speed punch':'fist','Slap':'slap','Throw':'throw','Slash':'sword','Speed slash':'fastsword','Wand bash':'wand','Energy ball':'cast','Energy blast':'floatcast'}; /* ultimates have their own flash sound, so they are not listed */
@@ -850,10 +850,62 @@ function sell(k,e,n){const id=decodeURIComponent(e);let g;if(k==='i'){g=(ITM[id]
 function sAll(){const pn=Object.keys(S.parts).filter(n=>S.parts[n]);if(!pn.length)return'';return`<button class="gold" style="flex-shrink:0" onclick="sellAllP()">🐾 Sell ALL monster parts (${pn.reduce((a,n)=>a+S.parts[n],0)} pcs) · +${pn.reduce((a,n)=>a+S.parts[n]*pp(n),0)}G</button>`}
 function sellAllP(){let g=0,c=0;Object.keys(S.parts).forEach(n=>{const q=S.parts[n]||0;g+=q*pp(n);c+=q});if(!c)return;S.parts={};S.gold+=g;sfxPlay('sold');shSay('sellall',{extra:` (+${g}G)`});shop()}
 /* ---------- combat ---------- */
-function fight(boss,win){const ar=X.ar,dm=[.7,1,1.4][S.diff],mo=MN[K[ar]][boss?19:0],idx=boss?19:Math.floor(Math.random()*19),mm=MN[K[ar]][idx],at=AT[mm[2]]||[1,1];
-  const hp=Math.round((14+ar*12+S.lvl*2)*(boss?boss.k:at[0])*dm);E={n:boss?boss.n:mm[0],e:'',mhp:hp,hp,atk:(3+ar*2.2)*dm*(boss?1.5:at[1]),boss:!!boss,win,bad:boss?boss.bad:'bad_mob',drop:mm[1]+' ('+ARL[ar]+')'};
+/* ---------- monster encounter transition ----------
+   Every fight (random monsters, farm and story bosses) goes through fight(), which first plays the encounter sound and a ~2.3 s transition,
+   then calls fightGo() (the real combat start). Timeline: 0-240 ms hit-stop (white flash, shake, black pixel vignette) ->
+   to 1950 ms the screen zooms in with growing motion blur, wobble and pixel speed lines -> to 2300 ms a pixel mosaic fills the screen white ->
+   combat appears and the white fades out. The overlay is a 160x90 canvas shown with pixelated scaling, so every effect is chunky pixels. */
+let encBusy=false;
+function fight(boss,win){encFx(()=>fightGo(boss,win))}
+function encFx(go){
+  const app=$('app'),scr=document.querySelector('.s.on');
+  if(encBusy||!app||!scr){go();return}
+  encBusy=true;
+  let enc=$('enc');
+  if(!enc){enc=document.createElement('div');enc.id='enc';enc.style.cssText='position:absolute;inset:0;z-index:45;display:none';const c=document.createElement('canvas');c.width=160;c.height=90;c.style.cssText='width:100%;height:100%;image-rendering:pixelated;display:block';enc.appendChild(c);app.appendChild(enc)}
+  const cv=enc.firstChild,cx=cv.getContext('2d'),W=160,H=90,HIT=240,ZE=1950,END=2300;
+  const bl=[];for(let i=0;i<576;i++)bl.push(i);for(let i=bl.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bl[i],bl[j]]=[bl[j],bl[i]]}
+  enc.style.cssText='position:absolute;inset:0;z-index:45;display:block;opacity:1;transition:none';
+  scr.style.transformOrigin='50% 58%';scr.style.willChange='transform,filter';
+  try{sfxPlay('encounter');bgmHold()}catch(e){}
+  let fin=false,raf=0,t0=0,lastStep=-1;
+  const ease=p=>p*p*(1.2+(-.2)*p);
+  const finish=()=>{if(fin)return;fin=true;cancelAnimationFrame(raf);
+    try{go()}finally{
+      scr.style.transform=scr.style.filter=scr.style.transformOrigin=scr.style.willChange='';
+      cx.globalAlpha=1;cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
+      requestAnimationFrame(()=>{enc.style.transition='opacity .35s';enc.style.opacity=0});
+      setTimeout(()=>{enc.style.display='none';enc.style.transition='none';enc.style.opacity=1;encBusy=false},420)}};
+  const frame=ts=>{
+    if(fin)return;if(!t0)t0=ts;const t=ts-t0;if(t>=END){finish();return}
+    const zp=t<HIT?0:Math.min(1,(t-HIT)/(ZE-HIT)),z=ease(zp);
+    let tx=0,ty=0,rot=0;
+    if(t<HIT){tx=Math.sin(t*.9)*.7;ty=Math.cos(t*1.3)*.5}
+    else{rot=Math.sin(t*.018)*1.4*z;tx=Math.sin(t*.05)*.5*z}
+    scr.style.transform='translate('+tx+'%,'+ty+'%) rotate('+rot+'deg) scale('+(1+.6*z)+')';
+    scr.style.filter=t<HIT?'none':'blur('+(5.5*z).toFixed(2)+'px) contrast('+(1+.45*z).toFixed(2)+') saturate('+(1+.7*z).toFixed(2)+') brightness('+(1-.12*z).toFixed(2)+')';
+    const st=Math.floor(t/50);
+    if(st!==lastStep){lastStep=st;
+      cx.clearRect(0,0,W,H);
+      /* pixel-banded black vignette */
+      const va=t<HIT?.5:.25+.3*z+.12*Math.sin(t*.02);
+      for(let y=0;y<H;y+=3)for(let x=0;x<W;x+=3){const dx=(x-W/2)/(W/2),dy=(y-H/2)/(H/2),d=Math.sqrt(dx*dx*.7+dy*dy*1.1),b=d>1.05?3:d>.88?2:d>.72?1:0;if(b){cx.fillStyle='rgba(0,0,0,'+Math.min(.95,va*1.5*b/3).toFixed(2)+')';cx.fillRect(x,y,3,3)}}
+      /* pixel speed lines, longer and denser as the zoom grows */
+      if(zp>0){const n=Math.round(18+46*z);for(let i=0;i<n;i++){const ang=Math.random()*6.2832,r0=14+Math.random()*(46-30*z),len=8+Math.random()*(26+60*z),c=Math.cos(ang),s=Math.sin(ang);cx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<len;k+=1){const x=Math.round(W/2+c*(r0+k)*1.78),y=Math.round(H*.58+s*(r0+k));if(x<0||x>=W||y<0||y>=H)break;cx.fillRect(x,y,1,1)}}}
+      /* hit-stop flash */
+      if(t<HIT){cx.fillStyle='rgba(255,255,255,'+(.75*(1-t/HIT)).toFixed(2)+')';cx.fillRect(0,0,W,H)}
+      /* closing pixel mosaic (32x18 blocks of 5x5 cells), then full white */
+      const mp=Math.max(0,(t-(ZE-150))/(END-ZE+150));
+      if(mp>0){cx.fillStyle='#fff';const nb=Math.floor(mp*576);for(let i=0;i<nb;i++){const b=bl[i];cx.fillRect((b%32)*5,Math.floor(b/32)*5,5,5)}}
+    }
+    raf=requestAnimationFrame(frame)};
+  raf=requestAnimationFrame(frame);
+  setTimeout(finish,END+350)  /* safety: a hidden tab pauses animation frames */
+}
+function fightGo(boss,win){const ar=X.ar,dm=[.7,1,1.4][S.diff],mo=MN[K[ar]][boss?19:0],idx=boss?19:Math.floor(Math.random()*19),mm=MN[K[ar]][idx],at=AT[mm[2]]||[1,1];
+  const hp=Math.round((14+ar*12+S.lvl*2)*(boss?boss.k:at[0])*dm);E={n:boss?boss.n:mm[0],e:'',mhp:hp,hp,atk:(3+ar*2.2)*dm*(boss?1.5:at[1]),boss:!!boss,ty:boss?'x':mm[2],win,bad:boss?boss.bad:'bad_mob',drop:mm[1]+' ('+ARL[ar]+')'};
   show('cb');cl();$('cb_cov').style.display='none';cq=[];cw=0;$('cb_st').style.background=bgs(ar);$('cb_cat').style.bottom=$('cb_en').style.bottom=floorB($('cb_st'),ar);cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main');const hh=cbLayout(ar,boss,idx);cat.play('idle');
-  $('cb_en').innerHTML=monHtml(K[ar],idx,hh);busy=false;cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main')}
+  $('cb_en').innerHTML=monHtml(K[ar],idx,hh);FX.reset();busy=false;cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main')}
 /* combat sizing: cat < every normal monster < boss; nothing reaches the HP labels */
 /* natural size of each monster, in cat-girl heights (cat = 1.0, humanoid). Armor knights are 1.15+, so she is always a bit smaller than any knight. First match wins. */
 const MSZ=[[/Dread|Doom|Black Knight|Magma Knight|Paladin/,1.22],[/Knight|Squire|Gilded Guard/,1.15],
@@ -881,8 +933,95 @@ function cm(k){const b=$('cb_menu');b.innerHTML='';const add=(x,fn,d)=>{const e=
  else if(k==='skl'){allSk().forEach(s=>{const lk=0;add(`${s[0]} (${s[1]}MP)${lk?' Lv'+ultLv():''}`,()=>act(s),lk||S.mp<s[1])});add(t('back'),()=>cm('main'))}
  else{Object.keys(ITM).filter(k=>S.inv[k]).forEach(k=>add(`${ITM[k][0]} x${S.inv[k]}`,()=>use(k)));Object.keys(TL).filter(k=>S.tl[k]).forEach(k=>add(`${TL[k][0]} x${S.tl[k]} (${TL[k][2]})`,()=>useT(k)));add(t('back'),()=>cm('main'))}if(k!=='main')b.querySelectorAll('button').forEach(e=>{e.classList.add('sm');let f=1.15;while(e.scrollWidth>e.clientWidth+1&&f>.8){f-=.05;e.style.fontSize=f+'em'}if(e.scrollWidth>e.clientWidth+1){e.style.whiteSpace='normal';e.style.lineHeight='1'}})}
 function pop(txt,id,kind){if(kind==='heal')sfxPlay('heal');else if(kind==='hurt')sfxPlay('cathit');const p=document.createElement('div');p.className='pop '+(kind||'hit');p.textContent=txt;const r=$(id),nm=r._nom||0;p.style.left=(r.offsetLeft+r.offsetWidth/2)+'px';p.style.top=(nm?r.offsetTop+r.offsetHeight-nm*.95:r.offsetTop+r.offsetHeight*.05)+'px';$('cb_st').appendChild(p);setTimeout(()=>p.remove(),2000);r.classList.remove('sh');void r.offsetWidth;r.classList.add('sh')}
+/* ---------- combat hit effects (build 45) ----------
+   Skill, thrown item and monster attack effects, drawn as chunky pixels on a canvas over the combat stage (see combat_effects_preview.html).
+   FX.skill(name) / FX.item(name) at the moment the cat girl's hit lands; FX.mon(E) returns the ms until a monster's hit lands (the damage number pops then);
+   FX.fade() fades a defeated monster out; FX.reset() restores it for the next fight. Ultimates have their own videos, so they get no extra effect. */
+const FX=(function(){
+const stage=()=>document.getElementById('cb_st'),monEl=()=>document.getElementById('cb_en'),catEl=()=>document.getElementById('cb_cat');
+let cv=null,cx=null,W=192,H=108,P=[],tier=1;
+function ensure(){const st=stage();if(!cv||!cv.isConnected){cv=document.createElement('canvas');cv.id='cb_fx';cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;z-index:3';st.appendChild(cv);cx=cv.getContext('2d');cv.width=0}
+  const h=Math.max(60,Math.round(W*st.clientHeight/Math.max(1,st.clientWidth)));if(cv.width!==W||cv.height!==h){cv.width=W;cv.height=h}H=h}
+function pt(el,fy){const r=stage().getBoundingClientRect(),m=el.getBoundingClientRect();return{x:(m.left+m.width/2-r.left)/r.width*W,y:(m.top+m.height*fy-r.top)/r.height*H}}
+const mp=()=>pt(monEl(),.5),cp=()=>pt(catEl(),.5);
+const R=(a,b)=>a+Math.random()*(b-a),later=(ms,f)=>setTimeout(f,ms);
+const add=o=>{o.age=0;P.push(o);kick()};
+function sq(x,y,vx,vy,g,life,c,s){add({k:'sq',x,y,vx,vy,g,life,c,s:s||2})}
+function burst(x,y,n,sp,cols,life,s,g){for(let i=0;i<n;i++){const a=R(0,6.283),v=R(sp*.35,sp);sq(x,y,Math.cos(a)*v,Math.sin(a)*v,g==null?20:g,R(life*.6,life),cols[i%cols.length],s)}}
+function ring(x,y,r1,c,life,fill,ry){add({k:'ring',x,y,r1,c,life,fill,ry:ry||1})}
+function star(x,y,L,c,life){add({k:'star',x,y,L,c,life})}
+function line(x1,y1,x2,y2,w,c,e,life){add({k:'line',x1,y1,x2,y2,w,c,e,life})}
+function flash(c,a,life){add({k:'flash',c,a,life})}
+function bolt(x,y,c){const pts=[];let px=x+R(-6,6),py=0;while(py<y){pts.push([px,py]);px+=R(-7,7);py+=R(7,12)}pts.push([x,y]);add({k:'bolt',pts,c,life:.35})}
+function blink(el,filt,ms){el.style.filter=filt;later(ms||90,()=>el.style.filter='')}
+function shake(a,ms){const st=stage();let t0=performance.now();(function f(){const t=performance.now()-t0;if(t>ms){st.style.transform='';return}const k=(1-t/ms)*a;st.style.transform='scale(1.03) translate('+((Math.random()*2-1)*k).toFixed(2)+'%,'+((Math.random()*2-1)*k*.6).toFixed(2)+'%)';requestAnimationFrame(f)})()}
+const T=()=>{const w=(S.ew||'1-0').split('-');tier=(+w[1]||0)+1;return 1+(tier-1)*.3}; /* weapon tier scale */
+/* ---------- cat girl attacks on the monster ---------- */
+const ATK={
+'Punch':()=>{const m=mp(),t=T();star(m.x,m.y,15*t,'#fff',.25);ring(m.x,m.y,18*t,'#fff6b0',.3);burst(m.x,m.y,10+tier*3,70*t,['#fff','#ffe36b','#ffb347'],.45);hurtMon(8,'#fff')},
+'High speed punch':()=>{const t=T();for(let i=0;i<7;i++)later(i*65,()=>{const m=mp(),x=m.x+R(-14,14),y=m.y+R(-16,16);star(x,y,8*t,'#fff',.18);burst(x,y,5,55,['#fff','#ffe36b'],.3);for(let k=0;k<3;k++)line(x-22,y+R(-8,8),x-6,y,1,'#fff','#fff',.14);hurtMon(3,'#fff')})},
+'Slap':()=>{const m=mp(),t=T();line(m.x+16*t,m.y-18*t,m.x-18*t,m.y+14*t,3,'#fff','#ff9ec8',.3);line(m.x+14*t,m.y-8*t,m.x-20*t,m.y+22*t,2,'#ffd6ea','#ff9ec8',.3);star(m.x,m.y,10*t,'#ffe0f0',.2);ring(m.x,m.y,13*t,'#ff9ec8',.3);burst(m.x,m.y,8,45,['#ffd6ea','#ff9ec8'],.4);hurtMon(6,'#fff')},
+'Throw':()=>{const m=mp(),t=T();burst(m.x,m.y+14,16+tier*3,55*t,['#8a7458','#b09874','#6b5a44'],.7,3,40);for(let i=0;i<10;i++)sq(m.x+R(-14,14),m.y+14,R(-8,8),R(-30,-10),-4,R(.5,.9),['#c9b79a','#a8977c'][i%2],4);ring(m.x,m.y+14,22*t,'#d8c7a8',.45,false,.3);line(m.x-10,m.y+16,m.x-24*t,m.y+22,1,'#4a3a28','#4a3a28',.9);line(m.x+8,m.y+16,m.x+22*t,m.y+22,1,'#4a3a28','#4a3a28',.9);star(m.x,m.y,13*t,'#fff',.2);hurtMon(10,'#fff')},
+'Slash':()=>{const m=mp(),t=T();line(m.x+26*t,m.y-30*t,m.x-26*t,m.y+30*t,4,'#fff','#7fe4ff',.35);burst(m.x,m.y,10+tier*3,70*t,['#fff','#7fe4ff','#bff3ff'],.45);star(m.x,m.y,12*t,'#bff3ff',.22);hurtMon(7,'#fff')},
+'Speed slash':()=>{const m=mp(),t=T();[[-1,-1,1,1],[1,-1,-1,1],[-1,.1,1,-.1]].forEach((a,i)=>later(i*110,()=>{line(m.x+a[0]*28*t,m.y+a[1]*30*t,m.x+a[2]*28*t,m.y+a[3]*30*t,i==2?5:3,'#fff','#7fe4ff',.3);burst(m.x,m.y,6,60,['#fff','#7fe4ff'],.35);hurtMon(4,'#fff')}));later(330,()=>{star(m.x,m.y,18*t,'#fff',.25);flash('#bff3ff',.35,.15)})},
+'Wand bash':()=>{const m=mp(),t=T();star(m.x,m.y,13*t,'#f3c6ff',.3);ring(m.x,m.y,17*t,'#c06bff',.35);burst(m.x,m.y,12+tier*2,60*t,['#fff','#e29bff','#9b5bff'],.55,2,-8);for(let i=0;i<8;i++)sq(m.x+R(-16,16),m.y+R(-6,18),0,R(-24,-10),0,R(.5,.9),['#fff','#e29bff'][i%2],2);hurtMon(7,'#e9b8ff')},
+'Energy ball':()=>{const m=mp(),t=T();add({k:'orb',x:m.x,y:m.y,r0:3,r1:22*t,c:'#7fd0ff',life:.4});ring(m.x,m.y,26*t,'#d8f2ff',.4);burst(m.x,m.y,14+tier*3,75*t,['#fff','#7fd0ff','#3b8dff'],.5);hurtMon(8,'#cfeaff')},
+'Energy blast':()=>{const m=mp(),c=cp(),t=T();line(c.x+14,c.y,m.x,m.y,5+tier,'#fff','#4db6ff',.45);later(190,()=>{add({k:'orb',x:m.x,y:m.y,r0:4,r1:32*t,c:'#bfe6ff',life:.5});ring(m.x,m.y,38*t,'#fff',.5);ring(m.x,m.y,26*t,'#4db6ff',.4);burst(m.x,m.y,26+tier*4,95*t,['#fff','#7fd0ff','#3b8dff'],.7);flash('#cfeaff',.5,.2);hurtMon(14,'#cfeaff')})}
+};
+const ITM={
+'Bomb':()=>{const m=mp();add({k:'orb',x:m.x,y:m.y,r0:4,r1:30,c:'#ffb02e',life:.5});add({k:'orb',x:m.x,y:m.y,r0:2,r1:16,c:'#fff3b0',life:.3});ring(m.x,m.y,34,'#ff7a1a',.45);burst(m.x,m.y,28,95,['#fff3b0','#ffb02e','#ff5a1a'],.7,3);for(let i=0;i<8;i++)sq(m.x+R(-10,10),m.y+R(-8,8),R(-14,14),R(-26,-10),-8,R(.8,1.2),['#3a332e','#59504a'][i%2],5);flash('#ffd9a0',.45,.18);hurtMon(14,'#ffe0b0')},
+'Fire flask':()=>{const m=mp();burst(m.x,m.y,10,50,['#ffe36b','#ffb02e'],.4);for(let i=0;i<70;i++)later(i*10,()=>sq(m.x+R(-14,14),m.y+R(0,20),R(-4,4),R(-34,-14),-4,R(.4,.8),['#fff3b0','#ffb02e','#ff7a1a','#e0301c'][Math.floor(Math.random()*4)],R(2,4)));ring(m.x,m.y+18,20,'#ff7a1a',.5,false,.3);hurtMon(10,'#ffd0a0')},
+'Thunder scroll':()=>{const m=mp();[0,110,230].forEach((d,i)=>later(d,()=>{bolt(m.x+R(-10,10),m.y+10,i==2?'#fff':'#ffe94a');burst(m.x,m.y+8,10,70,['#fff','#ffe94a'],.35);flash('#fff8c0',.45,.12);hurtMon(5,'#fff8a0')}));later(250,()=>{ring(m.x,m.y+10,28,'#ffe94a',.4);star(m.x,m.y,18,'#fff',.25)})}
+};
+/* ---------- monster attacks on the cat girl ---------- */
+const MATK={
+'Weak: tap':{lunge:1,fn:()=>{const c=cp();star(c.x,c.y,8,'#fff',.2);burst(c.x,c.y,5,40,['#fff','#ffd0d8'],.3);hurtCat(4)}},
+'Swarm: bites':{lunge:1,fn:()=>{const c=cp();for(let i=0;i<4;i++)later(i*90,()=>{const x=c.x+R(-10,10),y=c.y+R(-14,12);add({k:'bite',x,y,life:.35});burst(x,y,4,35,['#ff7d8a','#fff'],.3);hurtCat(2)})}},
+'Quick: claws':{lunge:1,fn:()=>{const c=cp();[-7,0,7].forEach((o,i)=>later(i*45,()=>line(c.x+o+14,c.y-24,c.x+o-14,c.y+20,2,'#fff','#ff4d5e',.35)));later(120,()=>{burst(c.x,c.y,10,60,['#ff4d5e','#fff'],.4);hurtCat(6)})}},
+'Balanced: strike':{lunge:1,fn:()=>{const c=cp();star(c.x,c.y,13,'#fff',.25);ring(c.x,c.y,15,'#ffe36b',.3);burst(c.x,c.y,10,60,['#fff','#ffe36b','#ff8a4a'],.4);hurtCat(7)}},
+'Bruiser: smash':{lunge:1,fn:()=>{const c=cp();star(c.x,c.y,22,'#fff',.3);ring(c.x,c.y,26,'#fff1a8',.4);burst(c.x,c.y,18,85,['#fff','#ffd24a','#ff8a4a'],.55);burst(c.x,c.y+16,10,40,['#b09874','#8a7458'],.6,3,30);flash('#fff',.3,.1);hurtCat(12)}},
+'Tank: ground slam':{lunge:1,fn:()=>{const c=cp();ring(c.x,c.y+20,40,'#d8c7a8',.6,false,.22);ring(c.x,c.y+20,26,'#fff',.4,false,.22);for(let i=0;i<14;i++)sq(c.x+R(-26,26),c.y+20,R(-6,6),R(-40,-14),30,R(.5,.9),['#c9b79a','#8a7458'][i%2],3);line(c.x-30,c.y+22,c.x+30,c.y+24,1,'#4a3a28','#4a3a28',.9);star(c.x,c.y+8,15,'#fff',.25);hurtCat(14)}},
+'Caster: dark magic':{lunge:0,fn:()=>{const m=mp(),c=cp();add({k:'proj',x:m.x-10,y:m.y,tx:c.x,ty:c.y,c:'#b36bff',life:.35,done:()=>{add({k:'orb',x:c.x,y:c.y,r0:3,r1:20,c:'#7a2bd6',life:.45});ring(c.x,c.y,24,'#d8a6ff',.4);burst(c.x,c.y,16,70,['#fff','#d8a6ff','#7a2bd6','#2a0f4a'],.6,2,-6);hurtCat(8)}})}},
+'Elite: heavy slash':{lunge:1,fn:()=>{const c=cp();line(c.x+30,c.y-34,c.x-30,c.y+30,5,'#fff','#ff4d5e',.4);later(110,()=>{line(c.x-30,c.y-30,c.x+30,c.y+30,5,'#fff','#ff4d5e',.4);burst(c.x,c.y,18,85,['#fff','#ff4d5e','#ffb0b8'],.55);flash('#ff5a6a',.3,.18);hurtCat(12)})}},
+'Boss: big strike':{lunge:1,fn:()=>{const c=cp();[[34,-38,-34,34],[40,-6,-40,8],[30,34,-30,-36]].forEach((a,i)=>later(i*100,()=>line(c.x+a[0],c.y+a[1],c.x+a[2],c.y+a[3],6,'#fff','#ff2d44',.45)));later(260,()=>{star(c.x,c.y,28,'#fff',.35);ring(c.x,c.y,36,'#ff4d5e',.5);burst(c.x,c.y,30,110,['#fff','#ff4d5e','#ffb0b8','#ffd24a'],.7);burst(c.x,c.y+16,12,45,['#b09874','#8a7458'],.7,3,30);flash('#ff2d44',.5,.3);hurtCat(20)})}},
+'Slime splat':{lunge:1,fn:()=>{const c=cp();burst(c.x,c.y,22,70,['#8dff8d','#4fd34f','#b8ffb8'],.8,3,40);ring(c.x,c.y,18,'#8dff8d',.4,true);for(let i=0;i<8;i++)sq(c.x+R(-12,12),c.y-14,0,R(6,20),10,R(.7,1.1),'#4fd34f',3);hurtCat(6)}},
+'Fire burst':{lunge:0,fn:()=>{const m=mp(),c=cp();add({k:'proj',x:m.x-10,y:m.y,tx:c.x,ty:c.y,c:'#ff7a1a',life:.3,done:()=>{add({k:'orb',x:c.x,y:c.y,r0:3,r1:22,c:'#ffb02e',life:.45});burst(c.x,c.y,22,80,['#fff3b0','#ffb02e','#ff5a1a'],.7,3);for(let i=0;i<30;i++)later(i*12,()=>sq(c.x+R(-10,10),c.y+R(-4,14),R(-3,3),R(-30,-12),-4,R(.4,.7),['#ffb02e','#ff7a1a','#e0301c'][i%3],3));hurtCat(10)}})}},
+'Ghost wail':{lunge:0,fn:()=>{const c=cp();for(let i=0;i<22;i++)later(i*22,()=>{const a=i*.7;sq(c.x+Math.cos(a)*16,c.y+Math.sin(a)*20,-Math.cos(a)*10,-Math.sin(a)*10-8,-6,R(.5,.9),['#cfe6ff','#a9a6ff','#fff'][i%3],3)});ring(c.x,c.y,22,'#a9a6ff',.6,false);ring(c.x,c.y,14,'#cfe6ff',.5,false);later(260,()=>{flash('#a9a6ff',.28,.3);hurtCat(8)})}}
+};
+function hurtMon(d,col){blink(monEl(),'brightness(3) saturate(0)',80)}
+function hurtCat(d){blink(catEl(),'brightness(2.2) sepia(1) saturate(6) hue-rotate(-40deg)',110);shake(d>=12?2.2:d>=8?1:.4,d>=12?320:200)}
+/* ---------- renderer ---------- */
+let last=0,acc=0,run=false;
+function frame(now){if(!last)last=now;const dt=Math.min(.05,(now-last)/1000);last=now;acc+=dt;if(acc>=1/30){const d=acc;acc=0;draw(d)}if(P.length)requestAnimationFrame(frame);else{run=false;last=0;cx.clearRect(0,0,W,H)}}
+function kick(){ensure();if(!run){run=true;last=0;requestAnimationFrame(frame)}}
+function dot(x,y,s,c,a){cx.globalAlpha=a==null?1:a;cx.fillStyle=c;cx.fillRect(Math.round(x),Math.round(y),s,s)}
+function draw(dt){cx.clearRect(0,0,W,H);cx.globalAlpha=1;
+ P=P.filter(p=>(p.age+=dt)<p.life+(p.k==='sq'?0:0));
+ for(const p of P){const f=p.age/p.life,a=1-f;
+  if(p.k==='sq'){p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;dot(p.x,p.y,p.s*(f>.7?.5:1)|0||1,p.c,Math.min(1,a*1.6))}
+  else if(p.k==='ring'){const r=p.r1*Math.min(1,f*1.6+.1);cx.globalAlpha=a;cx.fillStyle=p.c;if(p.fill){for(let y=-r;y<=r;y+=2)for(let x=-r;x<=r;x+=2)if(x*x+y*y<=r*r)cx.fillRect(Math.round(p.x+x),Math.round(p.y+y*p.ry),2,2)}else for(let i=0;i<48;i++){const t=i/48*6.283;cx.fillRect(Math.round(p.x+Math.cos(t)*r),Math.round(p.y+Math.sin(t)*r*p.ry),2,2)}}
+  else if(p.k==='orb'){const r=p.r0+(p.r1-p.r0)*Math.min(1,f*2.2);cx.globalAlpha=Math.min(1,a*1.8);cx.fillStyle=p.c;for(let y=-r;y<=r;y+=2)for(let x=-r;x<=r;x+=2)if(x*x+y*y<=r*r)cx.fillRect(Math.round(p.x+x),Math.round(p.y+y),2,2);cx.fillStyle='#fff';const r2=r*.55;for(let y=-r2;y<=r2;y+=2)for(let x=-r2;x<=r2;x+=2)if(x*x+y*y<=r2*r2)cx.fillRect(Math.round(p.x+x),Math.round(p.y+y),2,2)}
+  else if(p.k==='star'){const L=p.L*(f<.3?f/.3:1)*(f>.6?(1-f)/.4:1);cx.globalAlpha=1;for(let k=-L;k<=L;k+=1){const w=Math.max(1,(1-Math.abs(k)/L)*3|0);dot(p.x+k,p.y-w/2,w,p.c);dot(p.x-w/2,p.y+k,w,p.c)}for(let k=-L*.6;k<=L*.6;k+=1){dot(p.x+k,p.y+k,2,p.c);dot(p.x+k,p.y-k,2,p.c)}}
+  else if(p.k==='line'){const hp=Math.min(1,f/.3),n=Math.hypot(p.x2-p.x1,p.y2-p.y1)|0,al=f<.5?1:(1-f)*2;for(let i=0;i<=n*hp;i++){const t=i/n,x=p.x1+(p.x2-p.x1)*t,y=p.y1+(p.y2-p.y1)*t,w=Math.max(1,Math.sin(t*3.14159)*p.w|0)+2;dot(x-w/2,y-w/2,w,p.e,al*.8);dot(x-(w-2)/2,y-(w-2)/2,Math.max(1,w-2),p.c,al)}}
+  else if(p.k==='bolt'){cx.globalAlpha=a>.5?1:a*2;for(let w=3;w>=1;w-=2){cx.fillStyle=w==3?'#ffb62e':p.c;for(let i=0;i<p.pts.length-1;i++){const[a1,b1]=p.pts[i],[a2,b2]=p.pts[i+1],n=Math.hypot(a2-a1,b2-b1)|0;for(let k=0;k<=n;k++)cx.fillRect(Math.round(a1+(a2-a1)*k/n-w/2),Math.round(b1+(b2-b1)*k/n),w,2)}}}
+  else if(p.k==='flash'){cx.globalAlpha=p.a*a;cx.fillStyle=p.c;cx.fillRect(0,0,W,H)}
+  else if(p.k==='proj'){const t=Math.min(1,f),x=p.x+(p.tx-p.x)*t,y=p.y+(p.ty-p.y)*t;cx.globalAlpha=1;cx.fillStyle=p.c;for(let yy=-5;yy<=5;yy+=2)for(let xx=-5;xx<=5;xx+=2)if(xx*xx+yy*yy<=25)cx.fillRect(Math.round(x+xx),Math.round(y+yy),2,2);dot(x-2,y-2,4,'#fff');for(let k=1;k<5;k++)dot(x-k*5,y+R(-2,2),3,p.c,.6/k);if(f>=1&&!p.fired){p.fired=1;p.done&&p.done()}}
+  else if(p.k==='bite'){cx.globalAlpha=a>.4?1:a*2.5;cx.fillStyle='#fff';for(let i=0;i<4;i++){const ox=i*4-6;for(let k=0;k<6;k++){dot(p.x+ox+(k>>1)*0,p.y-8+k,2-(k>3?1:0)||1,'#fff')}}for(let i=0;i<4;i++){const ox=i*4-6;for(let k=0;k<6;k++)dot(p.x+ox,p.y+2+k,1,'#fff')}dot(p.x-8,p.y,18,'rgba(255,60,80,.25)',.4)}
+ }
+ cx.globalAlpha=1}
+
+const HITMS={"Weak: tap": 0, "Swarm: bites": 0, "Quick: claws": 120, "Balanced: strike": 0, "Bruiser: smash": 0, "Tank: ground slam": 0, "Caster: dark magic": 350, "Elite: heavy slash": 110, "Boss: big strike": 260, "Slime splat": 0, "Fire burst": 300, "Ghost wail": 260};
+function pick(E){const n=E.n||'';if(E.boss||E.ty==='x')return 'Boss: big strike';if(/slime|ooze/i.test(n))return 'Slime splat';if(/wisp|fireball|fire (elemental|spirit|cobra)|ember (imp|sprite)|pitchfork imp|flame cultist/i.test(n))return 'Fire burst';if(/ghost|wraith|shade|phantom/i.test(n))return 'Ghost wail';return({w:'Weak: tap',s:'Swarm: bites',q:'Quick: claws',n:'Balanced: strike',b:'Bruiser: smash',t:'Tank: ground slam',c:'Caster: dark magic',e:'Elite: heavy slash'})[E.ty]||'Balanced: strike'}
+function fade(){const e=monEl();blink(e,'brightness(3) saturate(0)',100);later(160,()=>blink(e,'brightness(3) saturate(0)',100));later(330,()=>{e.style.transition='opacity 1s ease-out,filter .08s';e.style.opacity=0})}
+function reset(){const e=monEl();e.style.transition='';e.style.opacity='';e.style.filter=''}
+return{skill:n=>{const f=ATK[n];if(f){ensure();f()}},item:n=>{const f=ITM[n];if(f){ensure();f()}},
+ mon:E=>{ensure();const k=pick(E),o=MATK[k],e=monEl(),cw=stage().clientWidth,gap=e.getBoundingClientRect().left-catEl().getBoundingClientRect().right;
+  if(o.lunge){const d=Math.max(cw*.05,Math.min(cw*.3,gap*.85));e.animate([{transform:'translateX(0)'},{transform:'translateX(-'+d+'px)',offset:.4},{transform:'translateX(-'+d+'px)',offset:.55},{transform:'translateX(0)'}],{duration:620,easing:'ease-in-out'});later(250,o.fn);return 250+HITMS[k]}
+  e.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:350});later(200,o.fn);return 200+HITMS[k]},
+ fade,reset}
+})();
 function act(s){if(busy)return;busy=true;S.mp-=s[1];cw=1;const c=$('cb_cov');c.style.display='flex';c.textContent='The cat girl uses '+s[0]+'!';
- const d=Math.round(ATK()*s[2]*(.9+Math.random()*.25)),kill=E.hp-d<=0,go=()=>{if(s[3]){sfxPlay('monhit');if(kill)sfxPlay('defeat',300)}E.hp-=d;pop(d,'cb_en');bars();cw=0;say([`The cat girl used ${s[0]}! ${d} damage to ${E.n}.`],()=>E.hp<=0?won():eTurn())};
+ const d=Math.round(ATK()*s[2]*(.9+Math.random()*.25)),kill=E.hp-d<=0,go=()=>{if(s[3]){sfxPlay('monhit');if(kill)sfxPlay('defeat',300)}E.hp-=d;if(!s[3])FX.skill(s[0]);pop(d,'cb_en');if(E.hp<=0)FX.fade();bars();cw=0;say([`The cat girl used ${s[0]}! ${d} damage to ${E.n}.`],()=>E.hp<=0?won():eTurn())};
  const an_=AN[s[0]]||'fist',ht=HIT[an_]||600;cat.play(an_,()=>cat.play('idle'));if(!s[3]){if(SKSND[s[0]])sfxAt(SKSND[s[0]],ht);sfxAt('monhit',ht);if(kill)sfxPlay('defeat',ht+300)}setTimeout(()=>s[3]?flash(s[0],()=>{kill||bgmRelease();go()}):go(),s[3]?350:ht)}
 function say(a,cb){cq=a.slice();cqcb=cb;covNext()}
 function covNext(){if(cw)return;const c=$('cb_cov');if(cq.length){c.style.display='flex';c.textContent=cq.shift()+'   ▼'}else{c.style.display='none';const f=cqcb;cqcb=null;f&&f()}}
@@ -892,9 +1031,10 @@ function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.inn
   setTimeout(()=>{v.style.opacity=1;f.style.background='#000';v.play().catch(()=>{v.muted=true;v.play().catch(end)})},450);setTimeout(end,20000)}
  else{f.textContent='⚡ '+n+' ⚡';setTimeout(end,1300)}}
 function use(k){if(busy)return;busy=true;const i=ITM[k];S.inv[k]--;let m;if(i[2]){S.hp=Math.min(S.mhp,S.hp+i[2]);m='You hand the cat girl a '+i[0]+'. +'+i[2]+' HP.'}else{S.mp=Math.min(S.mmp,S.mp+i[3]);m='You hand the cat girl an '+i[0]+'. +'+i[3]+' MP.'}bars();pop('+'+(i[2]||i[3]),'cb_cat','heal');cat.play('eat',()=>cat.play('idle'));sfxPlay('eat',300);say([m],eTurn)}
-function useT(k){if(busy)return;busy=true;S.tl[k]--;const d=TL[k][2],c=$('cb_cov');cw=1;c.style.display='flex';c.textContent='The cat girl throws a '+TL[k][0]+'!';cat.play('throw',()=>cat.play('idle'));sfxPlay('throw');sfxAt('itemhit',650);if(E.hp-d<=0)sfxPlay('defeat',950);setTimeout(()=>{E.hp-=d;pop(d,'cb_en');bars();cw=0;say(['The '+TL[k][0]+' hits '+E.n+' for '+d+' damage.'],()=>E.hp<=0?won():eTurn())},650)}
+function useT(k){if(busy)return;busy=true;S.tl[k]--;const d=TL[k][2],c=$('cb_cov');cw=1;c.style.display='flex';c.textContent='The cat girl throws a '+TL[k][0]+'!';cat.play('throw',()=>cat.play('idle'));sfxPlay('throw');sfxAt('itemhit',650);if(E.hp-d<=0)sfxPlay('defeat',950);setTimeout(()=>{E.hp-=d;FX.item(TL[k][0]);pop(d,'cb_en');if(E.hp<=0)FX.fade();bars();cw=0;say(['The '+TL[k][0]+' hits '+E.n+' for '+d+' damage.'],()=>E.hp<=0?won():eTurn())},650)}
 function flee(){if(busy)return;busy=true;if(E.boss)return say(['The cat girl refuses to run from a boss!'],eTurn);if(Math.random()<.6){sfxPlay('flee');bgmStop();say(['You tell the cat girl to retreat, and you get away!'],()=>explore())}else say(['Could not escape!'],eTurn)}
-function eTurn(){const d=Math.max(1,Math.round(E.atk*(.85+Math.random()*.3)));S.hp-=d;pop(d,'cb_cat','hurt');bars();
+function eTurn(){const d=Math.max(1,Math.round(E.atk*(.85+Math.random()*.3)));setTimeout(()=>eHit(d),FX.mon(E))}
+function eHit(d){S.hp-=d;pop(d,'cb_cat','hurt');bars();
  if(S.hp<=0){S.hp=0;bars();bgmStop();cat.play('cry');return say([`${E.n} hits the cat girl for ${d}.`,'The cat girl collapses...'],()=>{S.hp=S.mhp;ending(E.bad)})}
  say([`${E.n} hits the cat girl for ${d}.`],()=>{busy=false;cm('main')})}
 function won(){const ar=X.ar,xp=(5+ar*3)*(E.boss?5:1),g=4+ar*3+Math.floor(Math.random()*5)+(E.boss?40:0);S.xp+=xp;S.gold+=g;const L2=['Victory! '+E.n+' is defeated.',`Reward: ${xp} XP and ${g} gold.`];
