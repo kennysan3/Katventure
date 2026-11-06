@@ -220,7 +220,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 45</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 46</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -774,7 +774,7 @@ function ask(m,yes,no,yl,nl){const d=$('dlg'),y=$('dlg_y'),n=$('dlg_n'),c=()=>d.
 function exitG(){ask('Exit the game?',()=>{try{window.close()}catch(e){}ask('Thanks for playing! If the game did not close by itself, you can close this tab or app yourself.',null,null,'Back to menu',null)},null,'Exit','Stay')}
 /* ---------- map / explore ---------- */
 addEventListener('resize',()=>{if($('s_map').classList.contains('on'))sz($('m_cat'),.2)});
-function map(){wk++;ecat.play('idle');show('map');X=null;const sc=$('m_box');sc.style.background='url(assets/backgrounds/map_interactive.webp) center/100% 100%';$('m_hud').textContent=hud();$('m_story').style.outline=fm?'':'2px solid #ffb3d9';$('m_farm').style.outline=fm?'2px solid #ffb3d9':'';
+function map(){wk++;nxt=null;hideIcon();ecat.play('idle');show('map');X=null;const sc=$('m_box');sc.style.background='url(assets/backgrounds/map_interactive.webp) center/100% 100%';$('m_hud').textContent=hud();$('m_story').style.outline=fm?'':'2px solid #ffb3d9';$('m_farm').style.outline=fm?'2px solid #ffb3d9':'';
   $('m_svg').innerHTML=`<polyline points="${PT.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#5d3a1a" stroke-width="3" stroke-dasharray="8 6" vector-effect="non-scaling-stroke"/>`;
   const bx=$('m_pts');bx.innerHTML='';AR.forEach((a,i)=>{const b=document.createElement('button'),ok=fm?i<=S.prog:i===S.prog;b.innerHTML=(i+1)+'<small>'+a.n+(i<S.prog?' ✔':i>S.prog?' 🔒':'')+'</small>';b.className='pt';b.disabled=!ok;b.style.left=PT[i][0]+'%';b.style.top=PT[i][1]+'%';b.onclick=()=>goPt(i);bx.appendChild(b)});
   const mc=S.mc||0,c=$('m_cat');sz(c,.2);c.style.transition='none';c.style.transform=`translate(-50%,calc(-100% + ${Math.round(.12*c._nom)}px))`;c.style.left=PT[mc][0]+'%';c.style.top=PT[mc][1]+'%';mcat.play(mc===4?'float':'idle');autosave()}
@@ -783,19 +783,38 @@ function goPt(i){document.querySelectorAll('.pt').forEach(b=>b.disabled=true);co
 function setMode(m){fm=m;map()}
 function startStory(i){if(S.x&&S.x.ar===i&&!S.x.farm){X=S.x;return explore()}S.x=X=gen(i,0);vn('a'+i,explore)}
 function enterFarm(i){X=gen(i,1);explore()}
-function explore(){show('ex');$('ex_log').classList.remove('on');$('ex_log').onclick=null;const a=AR[X.ar];sz($('ex_cat'),.5);exBusy=0;$('ex_fwd').disabled=false;$('ex_cat').style.bottom=floorB($('ex_st'),X.ar);ecat.play(X.ar===4?'float':'idle');$('ex_st').style.background=bgs(X.ar);$('ex_h').textContent=`${a.n} · ${X.steps}/100${X.farm?' (farm)':''}`;$('ex_hud').textContent=hud()}
+function explore(){wk++;nxt=null;hideIcon();show('ex');$('ex_log').classList.remove('on');$('ex_log').onclick=null;const a=AR[X.ar];sz($('ex_cat'),.5);exBusy=0;$('ex_fwd').disabled=false;$('ex_cat').style.bottom=floorB($('ex_st'),X.ar);ecat.play(X.ar===4?'float':'idle');$('ex_st').style.background=bgs(X.ar);$('ex_h').textContent=`${a.n} · ${X.steps}/100${X.farm?' (farm)':''}`;$('ex_hud').textContent=hud()}
 function log(s){popup(s)}
 function popup(s,cb){explore();exBusy=1;$('ex_fwd').disabled=true;const l=$('ex_log');l.textContent=s+'   ▼';l.classList.add('on');l.onclick=()=>{l.onclick=null;l.classList.remove('on');l.textContent='';exBusy=0;$('ex_fwd').disabled=false;cb?cb():autosave()}}
-function fwd(){if(exBusy)return;exBusy=1;$('ex_fwd').disabled=true;const tk_=++wk,sky=X.ar===4;ecat.play(sky?'fly':'walk');setTimeout(()=>{if(tk_!==wk)return;ecat.play(sky?'float':'idle');fwd2()},1100)}
-function fwd2(){X.steps++;S.mp=Math.min(S.mmp,S.mp+1);const s=X.steps;
+/* ---------- encounter icons: what is ahead slides in opposite the cat girl while she walks ----------
+   fwd() decides what the step will be BEFORE the walk (rollStep), slides the matching icon in from the right edge of the exploration stage
+   (the stage clips it, so it comes from under the UI) and removes it just before the event, shop, camp or fight starts. The sleepy cat girl has no icon. */
+const EVIC={mush:'mush',mimic:'chest',dice:'dice',bridge:'bridge',cult:'cult',swamp:'swamp',shrine:'shrine',chest:'chest',npc:'npc',trap:'trap',herb:'herb'};
+const ICS={monster:1,flower:.38,shop:.9,camp:.75,mush:.42,chest:.42,dice:.85,bridge:.6,cult:.45,swamp:.6,shrine:.85,npc:.85,trap:.28,herb:.45}; /* height as a share of the cat girl's height */
+let nxt=null,icTok=0;
+if(USE_ASSETS)Object.keys(ICS).forEach(k=>{new Image().src='assets/encounter/'+k+'.webp'});
+function rollStep(){const s=X.steps+1;if(s>=100||X.shops.includes(s)||X.camps.includes(s))return null;const r=Math.random();
+  if(r<.38)return{t:'fight'};
+  if(r<.82){const e=['mush','mimic','dice','cult','swamp','shrine','chest','npc','trap','nap','herb'];if(EVA.bridge.includes(X.ar))e.push('bridge');return{t:'evt',ev:e[Math.floor(Math.random()*e.length)]}}
+  return{t:'none'}}
+function iconFor(p){const s=X.steps+1;if(s>=100)return'monster';if(X.shops.includes(s))return'shop';if(X.camps.includes(s))return'camp';if(!p)return null;return p.t==='fight'?'monster':p.t==='evt'?(EVIC[p.ev]||null):'flower'}
+function hideIcon(){icTok++;const i=$('ex_ic');if(i){i.style.display='none';i.style.transition='none'}}
+function showIcon(k){hideIcon();if(!USE_ASSETS||!k)return;const tok=icTok,st=$('ex_st'),cat=$('ex_cat');let i=$('ex_ic');
+  if(!i){i=document.createElement('img');i.id='ex_ic';i.alt='';i.draggable=false;i.style.cssText='position:absolute;z-index:1;pointer-events:none;display:none';st.appendChild(i)}
+  const place=()=>{if(tok!==icTok)return;const nom=cat._nom||Math.round($('app').clientHeight*.5),h=Math.round(nom*(ICS[k]||.6)),w=Math.round(i.naturalWidth/i.naturalHeight*h),sw=st.clientWidth,left=Math.round(sw-(cat.offsetLeft+cat.offsetWidth/2)-w/2);
+    i.style.height=h+'px';i.style.width=w+'px';i.style.bottom=cat.style.bottom;i.style.left=left+'px';i.style.transition='none';i.style.transform='translateX('+(sw-left+8)+'px)';i.style.display='block';void i.offsetWidth;
+    i.style.transition='transform .75s cubic-bezier(.2,.8,.25,1) .05s';i.style.transform='translateX(0)'};
+  const src='assets/encounter/'+k+'.webp';i.onload=null;if(i.getAttribute('src')===src&&i.complete&&i.naturalWidth)place();else{i.onload=place;i.src=src}}
+function fwd(){if(exBusy)return;exBusy=1;$('ex_fwd').disabled=true;const tk_=++wk,sky=X.ar===4;ecat.play(sky?'fly':'walk');nxt=rollStep();showIcon(iconFor(nxt));setTimeout(()=>{if(tk_!==wk)return;ecat.play(sky?'float':'idle');hideIcon();fwd2()},1100)}
+function fwd2(){X.steps++;S.mp=Math.min(S.mmp,S.mp+1);const s=X.steps,pl=nxt;nxt=null;
   if(s>=100)return areaEnd();
   if(X.shops.includes(s))return popup('You found a shop!',openShop);
   if(X.camps.includes(s)){S.hp=S.mhp;S.mp=S.mmp;autosave();if(!S.cooked){S.cooked=1;return vn('e_camp',explore)}return cook()}
-  const r=Math.random();
-  if(r<.38)return fight();
-  if(r<.82)return evt();
+  const p=pl||rollStep()||{t:'none'};
+  if(p.t==='fight')return fight();
+  if(p.t==='evt')return evt(p.ev);
   popup('Nothing happens. The cat girl sniffs a flower.')}
-function evt(){const e=['mush','mimic','dice','cult','swamp','shrine','chest','npc','trap','nap','herb'];if(EVA.bridge.includes(X.ar))e.push('bridge');vn('e_'+e[Math.floor(Math.random()*e.length)],explore)}
+function evt(n){const e=['mush','mimic','dice','cult','swamp','shrine','chest','npc','trap','nap','herb'];if(EVA.bridge.includes(X.ar))e.push('bridge');vn('e_'+(n||e[Math.floor(Math.random()*e.length)]),explore)}
 const FOODS=[['🍲','stew'],['🍛','curry'],['🍣','sushi'],['🍖','roast meat'],['🍜','ramen'],['🐟','grilled fish'],['🥞','pancakes'],['🍙','rice balls'],['🍕','pizza'],['🍰','cake']];
 const CSTART=['m:Stand back. You will waste the ingredients, {cat}.','m:Hands off the pot. Last time you turned dinner into a crime scene.','m:I am cooking this time. You are on guard duty, {cat}.','m:Sit. I am not letting you touch the ingredients again.'];
 const CEXTRA=[['c:[laugh]Can I have seconds? Nya!','m:You have not finished the first.'],['c:[shy]Um... thank you for cooking, {name}.','m:...Do not get used to it.'],['c:[curious]What is this green thing? Can I eat it?','m:That is the garnish. Yes. No, wait, do not eat the plate.'],['c:[angry]Why are you not sharing the big piece?!','m:Because you ate three already.'],['c:[tired]I am so sleepy after all that walking...','m:Eat first, sleep after.']];
