@@ -220,7 +220,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 47</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 49</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -429,7 +429,7 @@ SC.demA.splice(3,0,NG('This time I know what those cores do. ...I will not say m
 
 const hurt=n=>{n=Math.max(0,Math.min(n,S.hp-1));S.hp-=n;return n},gold=n=>{S.gold+=n;return n},hl=(a,b)=>{S.hp=Math.min(S.mhp,S.hp+(a||0));S.mp=Math.min(S.mmp,S.mp+(b||0))},AA=()=>X?X.ar:0;
 function defEv(name,intro,c){const id='e_'+name;SC[id]=P(intro).concat([{ch:c.map((o,i)=>[o[0],id+'_'+i,0,'',o[1]])}]);
- c.forEach((o,i)=>{let q=P(o[2]);if(o[1]==='x')q=q.concat([{end:o[4]}]);else{if(o[3])q=q.concat([{fn:()=>{lastL=o[3]()||''}},{w:'k',t:()=>lastL,if:()=>!!lastL}]);if(o[4])q=q.concat([{fn:()=>{after=()=>fight()}}])}SC[id+'_'+i]=q})}
+ c.forEach((o,i)=>{let q=P(o[2]);if(o[1]==='x')q=q.concat([{end:o[4]}]);else{if(o[3])q=q.concat([{fn:()=>{lastL=o[3]()||''}},{w:'k',t:()=>lastL,if:()=>!!lastL}]);if(o[4])q=q.concat([{fn:()=>{after=()=>fight(0,0,o[4]==='mimic'?'mimic':0)}}])}SC[id+'_'+i]=q})}
 defEv('mush',['k:(A glowing mushroom sits by the path, humming a tiny tune.)','c:[happy]{name}, look! It smells yummy!','m:It is glowing. Food does not glow, {cat}.'],[
 ['Stop her and sell it later','n',['c:Awww. Fine.','k:(The mushroom will sell for a decent price.)'],()=>'+'+gold(15+AA()*5)+' gold.'],
 ['Boil it into soup first','g',['m:Heat kills most things. Stand back.','c:[curious]It stopped glowing...','k:(The soup tastes odd, but it restores some strength.)'],()=>{hl(20,8);return '+20 HP, +8 MP.'}],
@@ -443,7 +443,7 @@ defEv('mimic',['k:(A treasure chest, sitting alone. Its lid is... breathing?)','
 ['Throw a rock at it','n',['k:(The chest yelps and hops away into the bushes.)','m:That is a new one.'],null],
 ['Walk away slowly','n',['m:Do not make eye contact. Keep walking.','c:[sad]But the shiny...'],null],
 ['Let her bite the lid','r',['c:[laugh]Nom!','k:(The mimic bites back. She scratches out a few coins anyway.)'],()=>{const h=hurt(5+AA()*2);return '-'+h+' HP, +'+gold(12)+' gold.'}],
-['Fight it','r',['m:Chests do not breathe. Get ready.','c:[angry]Come out, you cheater!'],null,1]]);
+['Fight it','r',['m:Chests do not breathe. Get ready.','c:[angry]Come out, you cheater!'],null,'mimic']]);
 defEv('dice',['k:(A hooded merchant flips a golden coin. One roll, double or nothing, he whispers.)','c:[happy]Let us play! I am feeling lucky!'],[
 ['Gamble all your gold','x',['m:...Fine. Everything.','k:(The coin lands on its edge. The merchant grins.)'],null,'bad_dice'],
 ['Decline politely','g',['m:No thanks. We are broke enough.','k:(The merchant sighs and throws you a free potion.)'],()=>{addI('pot');return '+1 Potion.'}],
@@ -879,7 +879,7 @@ function sellAllP(){let g=0,c=0;Object.keys(S.parts).forEach(n=>{const q=S.parts
    to 1950 ms the screen zooms in with growing motion blur, wobble and pixel speed lines -> to 2300 ms a pixel mosaic fills the screen white ->
    combat appears and the white fades out. The overlay is a 160x90 canvas shown with pixelated scaling, so every effect is chunky pixels. */
 let encBusy=false;
-function fight(boss,win){encFx(()=>fightGo(boss,win))}
+function fight(boss,win,force){encFx(()=>fightGo(boss,win,force))}
 function encFx(go){
   const app=$('app'),scr=document.querySelector('.s.on');
   if(encBusy||!app||!scr){go();return}
@@ -925,10 +925,18 @@ function encFx(go){
   raf=requestAnimationFrame(frame);
   setTimeout(finish,END+350)  /* safety: a hidden tab pauses animation frames */
 }
-function fightGo(boss,win){const ar=X.ar,dm=[.7,1,1.4][S.diff],mo=MN[K[ar]][boss?19:0],idx=boss?19:Math.floor(Math.random()*19),mm=MN[K[ar]][idx],at=AT[mm[2]]||[1,1];
-  const hp=Math.round((14+ar*12+S.lvl*2)*(boss?boss.k:at[0])*dm);E={n:boss?boss.n:mm[0],e:'',mhp:hp,hp,atk:(3+ar*2.2)*dm*(boss?1.5:at[1]),boss:!!boss,ty:boss?'x':mm[2],win,bad:boss?boss.bad:'bad_mob',drop:mm[1]+' ('+ARL[ar]+')'};
-  show('cb');cl();$('cb_cov').style.display='none';cq=[];cw=0;$('cb_st').style.background=bgs(ar);$('cb_cat').style.bottom=$('cb_en').style.bottom=floorB($('cb_st'),ar);cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main');const hh=cbLayout(ar,boss,idx);cat.play('idle');
-  $('cb_en').innerHTML=monHtml(K[ar],idx,hh);FX.reset();busy=false;cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main')}
+/* build 48/49: monster LEVEL. Only on normal and hard AND only once at least one castle ending has been obtained (cleared()); before that every fight is exactly as in build 47 (also no hard-mode second attack). Then: monster level ML; bosses = the cat girl's level; other monsters normal rolls 0 to 10 levels below her, hard 0 to 5 below. HP uses ML (as before it used her level); attack gets +0.8 per level above 1 (normal and hard only). */
+function mLv(boss){if(boss)return S.lvl;const r=S.diff===2?5:10;return Math.max(1,S.lvl-Math.floor(Math.random()*(r+1)))}
+/* the mimic chest event fights a mimic: the area's own mimic if it has one (Cave, Sky fortress), otherwise the wooden cave mimic sprite (gilded fortress one for the Castle) renamed after the area */
+const MIMSRC=[['cave',9],['cave',9],['cave',9],['cave',9],['sky_fortress',2],['cave',9],['sky_fortress',2]];
+K.forEach((k,ar)=>{const n='Mimic tooth ('+ARL[ar]+')';if(DROPP[n]==null)DROPP[n]=16+ar*7});
+function fightGo(boss,win,force){const ar=X.ar,dm=[.7,1,1.4][S.diff],mo=MN[K[ar]][boss?19:0];let ak=K[ar],idx=boss?19:Math.floor(Math.random()*19),mm=MN[K[ar]][idx];
+  if(force==='mimic'&&!boss){const nat=MN[K[ar]].findIndex(m=>/Mimic/.test(m[0]));if(nat>=0){idx=nat;mm=MN[K[ar]][nat]}else{const g=MIMSRC[ar];ak=g[0];idx=g[1];mm=[ARL[ar]+' Mimic','Mimic tooth','e']}}
+  const sc=S.diff>0&&cleared(),at=AT[mm[2]]||[1,1],ML=sc?mLv(boss):S.lvl,lb=sc?.8*(ML-1):0;
+  const hp=Math.round((14+ar*12+ML*2)*(boss?boss.k:at[0])*dm);E={n:boss?boss.n:mm[0],e:'',mhp:hp,hp,lv:ML,sc,ar,atk:(3+ar*2.2+lb)*dm*(boss?1.5:at[1]),boss:!!boss,ty:boss?'x':mm[2],win,bad:boss?boss.bad:'bad_mob',drop:mm[1]+' ('+ARL[ar]+')'};
+  if(S.diff===2&&sc){E.k1=FX.pick(E);E.k2=FX.alt(E,E.k1);E.last=0}
+  show('cb');cl();$('cb_cov').style.display='none';cq=[];cw=0;$('cb_st').style.background=bgs(ar);$('cb_cat').style.bottom=$('cb_en').style.bottom=floorB($('cb_st'),ar);cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main');const hh=cbLayout(ar,boss,idx,ak);cat.play('idle');
+  $('cb_en').innerHTML=monHtml(ak,idx,hh);FX.reset();busy=false;cmsg(E.n+' appears! Choose what the cat girl does.');bars();cm('main')}
 /* combat sizing: cat < every normal monster < boss; nothing reaches the HP labels */
 /* natural size of each monster, in cat-girl heights (cat = 1.0, humanoid). Armor knights are 1.15+, so she is always a bit smaller than any knight. First match wins. */
 const MSZ=[[/Dread|Doom|Black Knight|Magma Knight|Paladin/,1.22],[/Knight|Squire|Gilded Guard/,1.15],
@@ -940,17 +948,17 @@ const MSZ=[[/Dread|Doom|Black Knight|Magma Knight|Paladin/,1.22],[/Knight|Squire
 [/Skeleton|Automaton|Zombie|Witch|Cultist|Plague/,.95],[/Priest/,1],[/Wraith/,1.05],[/Shade/,1],[/Soot Ghost/,.8],[/Ghost/,1.1],[/Djinn/,1.3],[/Water Elemental/,1.1],[/Elemental/,1.2],
 [/Mimic/,.75],[/Thorn Vine/,.7],[/Vile Vine/,.9],[/Maneater/,1.3],[/Overgrowth/,1.2],[/Stone Fiend/,1],[/Eruption/,1.3],[/Devil/,1.3],[/Lesser Demon/,1]];
 const monScale=n=>{for(const[r,s]of MSZ)if(r.test(n))return s;return 1};
-function cbLayout(ar,boss,idx){const st=$('cb_st'),Hs=st.clientHeight,Ws=st.clientWidth,H=$('app').clientHeight,b=parseFloat(floorB(st,ar)),rs=MON[K[ar]][2];
+function cbLayout(ar,boss,idx,ak){const st=$('cb_st'),Hs=st.clientHeight,Ws=st.clientWidth,H=$('app').clientHeight,b=parseFloat(floorB(st,ar)),rs=MON[ak||K[ar]][2];
  const hud=Math.max($('cb_ph').parentElement.offsetHeight,$('cb_eh').parentElement.offsetHeight),avail=Math.max(60,Hs-b-(10+hud)-12),unit=avail*.47;
  sz($('cb_cat'),unit/.9/H);
  let hh;if(boss)hh=avail;else hh=Math.min(unit*monScale(E.n),avail*.86);
  const w=rs[idx][2]/rs[idx][3]*hh,cap=Ws*(boss?.62:.36);if(w>cap)hh*=cap/w;
  if(boss)hh=Math.max(hh,avail*.9);else if(monScale(E.n)>=1.1)hh=Math.max(hh,unit*1.1);hh=Math.round(Math.min(hh,avail));
- $('cb_en').innerHTML=monHtml(K[ar],idx,hh);return hh}
+ $('cb_en').innerHTML=monHtml(ak||K[ar],idx,hh);return hh}
 const cmsg=s=>{const m=$('cb_msg');m.textContent=s;fitMsg(m)};
 function fitMsg(m){m.classList.remove('wrap');m.style.fontSize='';if(!m.clientWidth)return;let f=1.3;while(m.scrollWidth>m.clientWidth+1&&f>1){f-=.05;m.style.fontSize=f+'em'}if(m.scrollWidth>m.clientWidth+1){m.style.fontSize='';m.classList.add('wrap')}}
 function fitVN(){const b=$('vn_box');b.style.fontSize='';let f=1.45;while(b.scrollHeight>b.clientHeight+1&&f>.95){f-=.05;b.style.fontSize=f+'em'}}
-function bars(){$('cb_ph').textContent=`Cat girl ${S.hp}/${S.mhp} · MP ${S.mp}`;$('cb_pb').style.width=Math.max(0,S.hp/S.mhp*100)+'%';$('cb_eh').textContent=`${E.n} · ATK ${Math.round(E.atk)} · ${Math.max(0,E.hp)}/${E.mhp}`;$('cb_eb').style.width=Math.max(0,E.hp/E.mhp*100)+'%'}
+function bars(){$('cb_ph').textContent=`Cat girl ${S.hp}/${S.mhp} · MP ${S.mp}`;$('cb_pb').style.width=Math.max(0,S.hp/S.mhp*100)+'%';$('cb_eh').textContent=`${E.sc?'Lv'+E.lv+' ':''}${E.n} · ATK ${Math.round(E.atk)} · ${Math.max(0,E.hp)}/${E.mhp}`;$('cb_eb').style.width=Math.max(0,E.hp/E.mhp*100)+'%'}
 function cm(k){const b=$('cb_menu');b.innerHTML='';const add=(x,fn,d)=>{const e=document.createElement('button');e.textContent=x;e.disabled=!!d;e.onclick=fn;b.appendChild(e)};
  if(k==='main'){add('\u2694\uFE0F '+t('atk'),()=>act(SK()[0]));add('\uD83D\uDCD6 '+t('skl'),()=>cm('skl'));add('\uD83C\uDF92 '+t('bag'),()=>cm('bag'));add('\uD83C\uDFC3 '+t('flee'),flee)}
  else if(k==='skl'){allSk().forEach(s=>{const lk=0;add(`${s[0]} (${s[1]}MP)${lk?' Lv'+ultLv():''}`,()=>act(s),lk||S.mp<s[1])});add(t('back'),()=>cm('main'))}
@@ -1034,14 +1042,23 @@ function draw(dt){cx.clearRect(0,0,W,H);cx.globalAlpha=1;
  cx.globalAlpha=1}
 
 const HITMS={"Weak: tap": 0, "Swarm: bites": 0, "Quick: claws": 120, "Balanced: strike": 0, "Bruiser: smash": 0, "Tank: ground slam": 0, "Caster: dark magic": 350, "Elite: heavy slash": 110, "Boss: big strike": 260, "Slime splat": 0, "Fire burst": 300, "Ghost wail": 260};
-function pick(E){const n=E.n||'';if(E.boss||E.ty==='x')return 'Boss: big strike';if(/slime|ooze/i.test(n))return 'Slime splat';if(/wisp|fireball|fire (elemental|spirit|cobra)|ember (imp|sprite)|pitchfork imp|flame cultist/i.test(n))return 'Fire burst';if(/ghost|wraith|shade|phantom/i.test(n))return 'Ghost wail';return({w:'Weak: tap',s:'Swarm: bites',q:'Quick: claws',n:'Balanced: strike',b:'Bruiser: smash',t:'Tank: ground slam',c:'Caster: dark magic',e:'Elite: heavy slash'})[E.ty]||'Balanced: strike'}
+function pick(E){const n=E.n||'';if(E.boss||E.ty==='x')return 'Boss: big strike';if(/mimic/i.test(n))return 'Swarm: bites';if(/slime|ooze/i.test(n))return 'Slime splat';if(/wisp|fireball|fire (elemental|spirit|cobra)|ember (imp|sprite)|pitchfork imp|flame cultist/i.test(n))return 'Fire burst';if(/ghost|wraith|shade|phantom/i.test(n))return 'Ghost wail';return({w:'Weak: tap',s:'Swarm: bites',q:'Quick: claws',n:'Balanced: strike',b:'Bruiser: smash',t:'Tank: ground slam',c:'Caster: dark magic',e:'Elite: heavy slash'})[E.ty]||'Balanced: strike'}
+/* build 48, hard mode: every monster has a second attack (its 'skill') picked once per fight from the same effect list, by what it looks like; it is used about 40 percent of the time (never twice in a row) and hits 1.4 times as hard. ALT = first matching name pattern; SECF = fallback by the normal attack; bosses by area (chimera claws, drake slam, dragon fire, colossus slam, manticore claws, titan fire, demon lord dark magic). */
+const ALT=[[/Mimic/,'Bruiser: smash'],[/Slime|Ooze/,'Bruiser: smash'],[/Fly Agaric/,'Caster: dark magic'],[/Toadstool|Shroom Shaman/,'Balanced: strike'],[/Maneater/,'Swarm: bites'],[/Thorn Vine|Vile Vine/,'Quick: claws'],[/Overgrowth/,'Bruiser: smash'],[/Treant/,'Tank: ground slam'],
+[/Beetle/,'Bruiser: smash'],[/Spider|Widow|Centipede|Scorpion|Bat|Cobra|Serpent|Worm|Wolf|Hound|Larva|Zombie|Bone Crawler/,'Swarm: bites'],[/Fox|Lizard|Mole|Crab|Plague|Lycan|Beast|Griffin|Gargoyle|Doll|Goblin/,'Quick: claws'],
+[/Phantom Knight|Knight|Paladin|Squire|Guard|Skeleton Soldier|Legionary|Spearman/,'Elite: heavy slash'],[/Flame Skeleton|Eruption|Devil|Djinn|Fire Elemental|Living Fireball|Fire Spirit|Wisp|Ember Sprite/,'Fire burst'],
+[/Flame Cultist|Pitchfork Imp|Ember Imp/,'Balanced: strike'],[/Imp|Demon|Fairy|Wraith|Shade|Ghost|Cultist/,'Caster: dark magic'],[/Eye|Orb|Witch|Priest/,'Ghost wail'],
+[/Golem|Colossus|Statue|Sentinel|Brute|Stone Fiend|Boulder|Ogre|Troll|Automaton|Water Elemental/,'Tank: ground slam']];
+const SECF={'Weak: tap':'Swarm: bites','Swarm: bites':'Quick: claws','Quick: claws':'Swarm: bites','Balanced: strike':'Bruiser: smash','Bruiser: smash':'Tank: ground slam','Tank: ground slam':'Bruiser: smash','Caster: dark magic':'Balanced: strike','Elite: heavy slash':'Bruiser: smash','Slime splat':'Bruiser: smash','Fire burst':'Balanced: strike','Ghost wail':'Caster: dark magic','Boss: big strike':'Quick: claws'};
+const NM={'Weak: tap':'Tackle','Swarm: bites':'Frenzied bites','Quick: claws':'Claw flurry','Balanced: strike':'Power strike','Bruiser: smash':'Crushing smash','Tank: ground slam':'Ground slam','Caster: dark magic':'Dark bolt','Elite: heavy slash':'Cross slash','Boss: big strike':'Rending strike','Slime splat':'Acid splat','Fire burst':'Fireball','Ghost wail':'Wailing curse'};
+function alt(E,p){const n=E.n||'';let r;if(E.boss||E.ty==='x')r=['Quick: claws','Tank: ground slam','Fire burst','Tank: ground slam','Quick: claws','Fire burst','Caster: dark magic'][E.ar];else{for(const[re,k]of ALT)if(re.test(n)){r=k;break}}if(!r||r===p)r=SECF[p]||'Balanced: strike';if(r===p)r='Balanced: strike';return r}
 function fade(){const e=monEl();blink(e,'brightness(3) saturate(0)',100);later(160,()=>blink(e,'brightness(3) saturate(0)',100));later(330,()=>{e.style.transition='opacity 1s ease-out,filter .08s';e.style.opacity=0})}
 function reset(){const e=monEl();e.style.transition='';e.style.opacity='';e.style.filter=''}
 return{skill:n=>{const f=ATK[n];if(f){ensure();f()}},item:n=>{const f=ITM[n];if(f){ensure();f()}},
- mon:E=>{ensure();const k=pick(E),o=MATK[k],e=monEl(),cw=stage().clientWidth,gap=e.getBoundingClientRect().left-catEl().getBoundingClientRect().right;
+ mon:(E,kk)=>{ensure();const k=kk||pick(E),o=MATK[k],e=monEl(),cw=stage().clientWidth,gap=e.getBoundingClientRect().left-catEl().getBoundingClientRect().right;
   if(o.lunge){const d=Math.max(cw*.05,Math.min(cw*.3,gap*.85));e.animate([{transform:'translateX(0)'},{transform:'translateX(-'+d+'px)',offset:.4},{transform:'translateX(-'+d+'px)',offset:.55},{transform:'translateX(0)'}],{duration:620,easing:'ease-in-out'});later(250,o.fn);return 250+HITMS[k]}
   e.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:350});later(200,o.fn);return 200+HITMS[k]},
- fade,reset}
+ fade,reset,pick,alt,nm:k=>NM[k]||'attack'}
 })();
 function act(s){if(busy)return;busy=true;S.mp-=s[1];cw=1;const c=$('cb_cov');c.style.display='flex';c.textContent='The cat girl uses '+s[0]+'!';
  const d=Math.round(ATK()*s[2]*(.9+Math.random()*.25)),kill=E.hp-d<=0,go=()=>{if(s[3]){sfxPlay('monhit');if(kill)sfxPlay('defeat',300)}E.hp-=d;if(!s[3])FX.skill(s[0]);pop(d,'cb_en');if(E.hp<=0)FX.fade();bars();cw=0;say([`The cat girl used ${s[0]}! ${d} damage to ${E.n}.`],()=>E.hp<=0?won():eTurn())};
@@ -1056,10 +1073,10 @@ function flash(n,cb){const f=$('flash');let dn=0;f.style.background='#fff';f.inn
 function use(k){if(busy)return;busy=true;const i=ITM[k];S.inv[k]--;let m;if(i[2]){S.hp=Math.min(S.mhp,S.hp+i[2]);m='You hand the cat girl a '+i[0]+'. +'+i[2]+' HP.'}else{S.mp=Math.min(S.mmp,S.mp+i[3]);m='You hand the cat girl an '+i[0]+'. +'+i[3]+' MP.'}bars();pop('+'+(i[2]||i[3]),'cb_cat','heal');cat.play('eat',()=>cat.play('idle'));sfxPlay('eat',300);say([m],eTurn)}
 function useT(k){if(busy)return;busy=true;S.tl[k]--;const d=TL[k][2],c=$('cb_cov');cw=1;c.style.display='flex';c.textContent='The cat girl throws a '+TL[k][0]+'!';cat.play('throw',()=>cat.play('idle'));sfxPlay('throw');sfxAt('itemhit',650);if(E.hp-d<=0)sfxPlay('defeat',950);setTimeout(()=>{E.hp-=d;FX.item(TL[k][0]);pop(d,'cb_en');if(E.hp<=0)FX.fade();bars();cw=0;say(['The '+TL[k][0]+' hits '+E.n+' for '+d+' damage.'],()=>E.hp<=0?won():eTurn())},650)}
 function flee(){if(busy)return;busy=true;if(E.boss)return say(['The cat girl refuses to run from a boss!'],eTurn);if(Math.random()<.6){sfxPlay('flee');bgmStop();say(['You tell the cat girl to retreat, and you get away!'],()=>explore())}else say(['Could not escape!'],eTurn)}
-function eTurn(){const d=Math.max(1,Math.round(E.atk*(.85+Math.random()*.3)));setTimeout(()=>eHit(d),FX.mon(E))}
-function eHit(d){S.hp-=d;pop(d,'cb_cat','hurt');bars();
- if(S.hp<=0){S.hp=0;bars();bgmStop();cat.play('cry');return say([`${E.n} hits the cat girl for ${d}.`,'The cat girl collapses...'],()=>{S.hp=S.mhp;ending(E.bad)})}
- say([`${E.n} hits the cat girl for ${d}.`],()=>{busy=false;cm('main')})}
+function eTurn(){let sk=0;if(S.diff===2&&E.k2&&!E.last&&Math.random()<.4)sk=1;E.last=sk;E.sk=sk?FX.nm(E.k2):'';const d=Math.max(1,Math.round(E.atk*(sk?1.4:1)*(.85+Math.random()*.3)));setTimeout(()=>eHit(d),FX.mon(E,S.diff===2?(sk?E.k2:E.k1):undefined))}
+function eHit(d){S.hp-=d;pop(d,'cb_cat','hurt');bars();const hm=E.sk?`${E.n} uses ${E.sk}! It hits the cat girl for ${d}.`:`${E.n} hits the cat girl for ${d}.`;
+ if(S.hp<=0){S.hp=0;bars();bgmStop();cat.play('cry');return say([hm,'The cat girl collapses...'],()=>{S.hp=S.mhp;ending(E.bad)})}
+ say([hm],()=>{busy=false;cm('main')})}
 function won(){const ar=X.ar,xp=(5+ar*3)*(E.boss?5:1),g=4+ar*3+Math.floor(Math.random()*5)+(E.boss?40:0);S.xp+=xp;S.gold+=g;const L2=['Victory! '+E.n+' is defeated.',`Reward: ${xp} XP and ${g} gold.`];
  while(S.xp>=S.lvl*18){S.xp-=S.lvl*18;S.lvl++;S.mhp+=8;S.mmp+=3;S.hp=S.mhp;S.mp=S.mmp;L2.push(`Level up! The cat girl reached Lv${S.lvl}. HP, MP and ATK rose.`)}
  if(E.boss||Math.random()<.65){const pn=E.drop;S.parts[pn]=(S.parts[pn]||0)+1;L2.push('Dropped: '+pn+'.')}bgmStop();cat.play('win');sfxPlay('win');say(L2,()=>{autosave();E.win?E.win():explore()})}
