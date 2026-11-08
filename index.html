@@ -2,6 +2,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#111;color:#fff;font:16px system-ui,"Noto Sans JP","Noto Sans SC",sans-serif}
 #app{max-width:900px;margin:0 auto;min-height:100vh;position:relative}
+#ml_cv{width:100%;height:100vh;object-fit:contain;background:#000;display:block}#ml_tap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;font-size:1.4em;letter-spacing:.05em;cursor:pointer;text-align:center}
 .s{display:none;min-height:100vh;flex-direction:column;padding:14px;gap:10px}.s.on{display:flex}
 button,select,input{font:inherit;padding:10px 14px;border-radius:10px;border:1px solid #ffffff55;background:#2b2b3a;color:#fff}
 button:disabled{opacity:.35}button.seen{opacity:.85;border-style:dashed}button:active{filter:brightness(1.3)}
@@ -220,7 +221,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 49</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 51</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -244,7 +245,9 @@ button{white-space:nowrap}
 <div style="position:absolute;right:10px;top:10px;text-align:right"><div class="hud" id="cb_eh"></div><div class="bar" style="margin-left:auto"><i id="cb_eb"></i></div></div></div>
 <div class="box" id="cb_msg"></div><div id="cb_bot" style="position:relative"><div class="g2" id="cb_menu"></div><div id="cb_cov" onclick="covNext()"></div></div></div>
 
-<div class="s c" id="s_end" style="padding:0"><img id="end_i" style="display:none"><div id="end_box"><h2 id="end_t"></h2><p id="end_d"></p><div id="end_n" class="hud"></div><button data-i="toMenu" onclick="show('menu');refreshMenu()"></button></div></div>
+<div class="s c" id="s_end" style="padding:0"><img id="end_i" style="display:none"><div id="end_box"><h2 id="end_t"></h2><p id="end_d"></p><div id="end_n" class="hud"></div><button data-i="toMenu" onclick="endBack()"></button></div></div>
+
+<div class="s c" id="s_ml" style="padding:0;gap:0;background:#000;position:relative"><canvas id="ml_cv" width="1280" height="720"></canvas><div id="ml_tap"></div></div>
 
 <div id="rot">Please rotate your device to landscape</div><div id="ov"><div id="ovb"></div></div><div id="flash"></div><div id="dlg"><div id="dlgb"><p id="dlg_m"></p><div class="row"><button id="dlg_y"></button><button id="dlg_n"></button></div></div></div></div>
 <script>
@@ -252,12 +255,12 @@ const $=i=>document.getElementById(i),ls={get(k,d){try{const v=localStorage.getI
 const USE_ASSETS=true; // test build: set true later to load sprites, backgrounds, CG and videos from assets/
 const VID={'Ultimate slash':'assets/videos/Ultimate_slash.mp4','Unlimited laser':'assets/videos/Unlimited_laser.mp4','All in attack':'assets/videos/All_in_attack.mp4'};
 let lang=ls.get('cg_lang','en'),S=null,X=null,Q=[],qi=0,after=null,curL='',E=null,busy=false,fm=0;
-const L={en:{new:'New Adventure',cont:'Continue',gal:'Gallery',set:'Settings',exit:'Bye-bye',atk:'Attack',skl:'Skills',bag:'Bag',flee:'Flee',fwd:'Walk forward',menu:'Menu',back:'Back',start:'Start',close:'Close',map:'Interactive map',story:'Story mode',farm:'Farm mode',name:'Name',male:'Male',female:'Female',easy:'Easy',normal:'Normal',hard:'Hard',toMenu:'Back to title',save:'Save',load:'Load'},
-ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',set:'設定',exit:'ゲーム終了',atk:'攻撃',skl:'スキル',bag:'バッグ',flee:'逃げる',fwd:'進む',menu:'メニュー',back:'戻る',start:'開始',close:'閉じる',map:'マップ',story:'ストーリー',farm:'経験値稼ぎ',name:'名前',male:'男性',female:'女性',easy:'イージー',normal:'ノーマル',hard:'ハード',toMenu:'メニューへ戻る',save:'セーブ',load:'ロード'},
-zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',save:'存档',load:'读档'}};
+const L={en:{new:'New Adventure',cont:'Continue',gal:'Gallery',set:'Settings',exit:'Bye-bye',atk:'Attack',skl:'Skills',bag:'Bag',flee:'Flee',fwd:'Walk forward',menu:'Menu',back:'Back',start:'Start',close:'Close',map:'Interactive map',story:'Story mode',farm:'Farm mode',name:'Name',male:'Male',female:'Female',easy:'Easy',normal:'Normal',hard:'Hard',toMenu:'Back to title',mlTap:'Tap to start ♪',save:'Save',load:'Load'},
+ja:{new:'ニューゲーム',cont:'コンティニュー',gal:'ギャラリー',set:'設定',exit:'ゲーム終了',atk:'攻撃',skl:'スキル',bag:'バッグ',flee:'逃げる',fwd:'進む',menu:'メニュー',back:'戻る',start:'開始',close:'閉じる',map:'マップ',story:'ストーリー',farm:'経験値稼ぎ',name:'名前',male:'男性',female:'女性',easy:'イージー',normal:'ノーマル',hard:'ハード',toMenu:'メニューへ戻る',mlTap:'タップして開始 ♪',save:'セーブ',load:'ロード'},
+zh:{new:'新游戏',cont:'继续',gal:'画廊',set:'设置',exit:'退出游戏',atk:'攻击',skl:'技能',bag:'背包',flee:'逃跑',fwd:'前进',menu:'菜单',back:'返回',start:'开始',close:'关闭',map:'互动地图',story:'剧情模式',farm:'练级模式',name:'名字',male:'男',female:'女',easy:'简单',normal:'普通',hard:'困难',toMenu:'返回菜单',mlTap:'点击开始 ♪',save:'存档',load:'读档'}};
 const t=k=>L[lang][k]||L.en[k]||k;
 /* ---- BGM: every track is prepared with tools/prep_bgm.py (-18 LUFS, 96 kbps) and ALL tracks share ONE slider (cg_bgm) ---- */
-const BGM={shop:'assets/bgm/shop.mp3',home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3',wasteland:'assets/bgm/wasteland.mp3',ruins:'assets/bgm/ruins.mp3',sky:'assets/bgm/sky.mp3',demon:'assets/bgm/demon.mp3',end_demon:'assets/bgm/end_demon.mp3',end_angel:'assets/bgm/end_angel.mp3',end_wedding:'assets/bgm/end_wedding.mp3'};
+const BGM={shop:'assets/bgm/shop.mp3',home:'assets/bgm/home.mp3',map:'assets/bgm/map.mp3',battle:'assets/bgm/battle.mp3',boss:'assets/bgm/boss.mp3',bad:'assets/bgm/bad.mp3',forest:'assets/bgm/forest.mp3',cave:'assets/bgm/cave.mp3',lava:'assets/bgm/lava.mp3',wasteland:'assets/bgm/wasteland.mp3',ruins:'assets/bgm/ruins.mp3',sky:'assets/bgm/sky.mp3',demon:'assets/bgm/demon.mp3',end_demon:'assets/bgm/end_demon.mp3',end_angel:'assets/bgm/end_angel.mp3',end_wedding:'assets/bgm/end_wedding.mp3',memlane:'assets/bgm/memory_lane.mp3'};
 /* ENDING music (build 47): after the player picks the final object in the Demon lord castle, the ending's own track plays through the ending visual novel and the ending screen (looped, keeps playing between them). normal = forest track, sad = home screen track, angel/demon/wedding = their own tracks. endBgm is cleared as soon as any other screen shows. */
 const ENDBG={normal:'forest',angel:'end_angel',demon:'end_demon',sad:'home',wedding:'end_wedding'};let endBgm=null;
 /* AREA music: AREA_BGM[area index] = key in BGM. It plays in exploration and in every visual novel scene while an area is active (X set) and is NOT restarted when switching exploration <-> visual novel <-> choice selection; after a fight its position is resumed. Areas without an entry stay silent as before. Forest (0) is used by story AND farm mode. */
@@ -267,7 +270,7 @@ let bgmWant=null,bgmKey=null,bgmT=0,bgmHeld=false,endBad=false;
 const bgmVol=()=>Math.max(0,Math.min(1,ls.get('cg_bgm',70)/100));
 function bgmSet(){clearInterval(bgmT);bgmA.volume=bgmVol()}
 function bgmFade(to,done){clearInterval(bgmT);bgmT=setInterval(()=>{const d=to-bgmA.volume;if(Math.abs(d)<.03){bgmA.volume=to;clearInterval(bgmT);done&&done()}else bgmA.volume=Math.max(0,Math.min(1,bgmA.volume+Math.sign(d)*.03))},40)}
-function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmSave();bgmKey=k;bgmA.loop=k!=='bad';bgmA.src=BGM[k];bgmA.volume=0;const t=bgmPos[k];if(t)bgmA.addEventListener('loadedmetadata',()=>{try{bgmA.currentTime=t}catch(e){}},{once:true})}const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});bgmFade(bgmVol())}
+function bgmPlay(k){bgmWant=k;if(bgmKey!==k){bgmSave();bgmKey=k;bgmA.loop=k!=='bad'&&k!=='memlane';bgmA.src=BGM[k];bgmA.volume=0;const t=bgmPos[k];if(t)bgmA.addEventListener('loadedmetadata',()=>{try{bgmA.currentTime=t}catch(e){}},{once:true})}const p=bgmA.play();if(p&&p.catch)p.catch(()=>{});bgmFade(bgmVol())}
 function bgmStop(){bgmWant=null;bgmHeld=false;bgmFade(0,()=>{if(!bgmWant)bgmA.pause()})}
 function bgmSave(){if(bgmKey&&AREA_BGM.includes(bgmKey))bgmPos[bgmKey]=bgmA.currentTime}
 function bgmShow(i){const ak=X&&AREA_BGM[X.ar];
@@ -726,12 +729,196 @@ function tierMix(k,a){const T=tierN();if(!T||/^(end_|intro$|loot$)/.test(k))retu
  [[PAS,'m'],[CAS,'c']].forEach(([pool,w])=>{if(rnd()<pr){const hi=Math.min(pool.length,4*T),lo=Math.max(0,hi-8),txt=pool[lo+Math.floor(rnd()*(hi-lo))],at=el[Math.floor(rnd()*el.length)];ins.push([at,P(txt.slice(2).split(/ (?=\[\w+\])/).map(s=>txt[0]+':'+s))])}});
  ins.sort((x,y)=>y[0]-x[0]).forEach(([at,o])=>out.splice(at+1,0,...o));return out}
 function endGo(id){const l='end_'+id;endBgm=ENDBG[id]||null;if(endBgm){delete bgmPos[endBgm];bgmHeld=false;bgmPlay(endBgm)}if(SC[l])vn(l);else ending(id)}
-function ending(id){const e=EN[id],u=ls.get('cg_end',[]);if(e[2]&&!allCast(u))ls.set('cg_runs',runsN(u)+1);if(!u.includes(id)){u.push(id);ls.set('cg_end',u)}ls.set('cg_plays',ls.get('cg_plays',0)+1);
+function ending(id){lastEnd=id;const e=EN[id],u=ls.get('cg_end',[]);if(e[2]&&!allCast(u))ls.set('cg_runs',runsN(u)+1);if(!u.includes(id)){u.push(id);ls.set('cg_end',u)}ls.set('cg_plays',ls.get('cg_plays',0)+1);
   let d=e[1];if(id==='wedding')d=(S.g==='f'?'You slip on the wedding ring and, in a flash of magic, turn into a man. ':'You slip on the wedding ring. ')+'The cat girl cheers, you ascend to godhood together, and you live happily ever after in a small hut in the forest where you met, with five children. Nya!';
   $('end_t').textContent=e[0];const im=$('end_i');im.style.display='';im.onerror=()=>im.style.display='none';const ep=endP(id);im.src='assets/'+ep+'.webp';seenG(ep);$('end_d').textContent=d;$('end_n').textContent=u.length+' / '+Object.keys(EN).length+' endings found';
   endBad=id.startsWith('bad');
   if(e[2]){for(let i=1;i<=99;i++)ls.del('cg_s'+i);const cr=S?{lvl:S.lvl,xp:S.xp,mhp:S.mhp,mmp:S.mmp,pa:S.pa||0,gold:S.gold,inv:Object.assign({},S.inv),tl:Object.assign({},S.tl),parts:Object.assign({},S.parts)}:null;ls.set('cg_s0',{fresh:1,ng:1,name:'New Game+',last:id,carry:cr});S=null;X=null}
   show('end')}
+/* ===== memory lane clip engine (shared by index.html and memory_lane_draft.html) =====
+MemLane(canvas, {FR,D2,MON}, META) -> {render(t), loadAll(onProgress), DUR, setDbg(bool)}. Pure function of the song time t, so it can seek freely. */
+function MemLane(cv,TB,META,opt){opt=opt||{};
+const FR=TB.FR,D2=TB.D2,MON=TB.MON,W=1280,H=720;
+const K=['forest','cave','wasteland','ruins','sky_fortress','lavaland','demonlord_castle','forest'];
+const NM=['Forest','Cave','Wasteland','Ruins','Sky fortress','Lavaland','Demon lord castle','Forest (home)'];
+const FY=[.87,.87,.86,.87,.89,.91,.88,.87];
+const TA=META.arrive; // time each area is reached (area centred on screen)
+const DUR=META.dur, BP=META.bp;
+const TINT=[[120,200,120],[90,110,210],[225,160,80],[90,190,170],[255,225,150],[255,90,50],[150,70,200],[255,185,135]];
+const CAT_S=1.2, FLOORY=.88*H, TILE_H=1.35*H, TILE_W=TILE_H*1600/893, OV=300, S=TILE_W-OV;
+// ---- timing of the walk -------------------------------------------------
+const HOLD=TA.map((t,i)=>i===6?t+1+0.95+0.35:t+1);   // when she starts moving again
+const EXC0=TA[6]+1, EXC1=EXC0+0.9;                    // excited animation (9 frames x 100 ms)
+const HOME0=TA[7], HOME1=HOME0+3.4, SLEEP0=HOME1+0.45, SLEEP1=SLEEP0+8*0.23; // walk to middle, sleep
+const CAT_X0=.30*W, CAT_X1=.50*W;
+const sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
+const eio=x=>{x=Math.max(0,Math.min(1,x));return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+function seg(t){for(let i=0;i<7;i++)if(t<TA[i+1])return i;return 7}
+function prog(i,t){ // 0..1 progress of the pan from area i to i+1
+  const t0=HOLD[i],t1=TA[i+1],d=t1-t0,a=Math.min(2.4,d/3),vm=1/(d-a),u=t-t0;
+  if(u<=0)return 0;if(u>=d)return 1;
+  if(u<a)return .5*vm*u*u/a;if(u<d-a)return .5*vm*a+vm*(u-a);const r=d-u;return 1-.5*vm*r*r/a}
+function Pos(t){const i=seg(t);if(i>=7)return 7;return i+prog(i,t)}   // camera position in area units
+function moving(t){const i=seg(t);return i<7&&t>=HOLD[i]}
+// ---- audio-driven values ------------------------------------------------
+const EN=[];for(let i=0;i<META.E.length;i+=2)EN.push(+META.E.substr(i,2)/99);
+function energy(t){const x=Math.max(0,Math.min(EN.length-1.001,t*10)),i=x|0;return EN[i]*(1-(x-i))+EN[i+1]*(x-i)}
+function beat(t){const g=t<100?[META.ph1,META.bp1]:[META.ph2,META.bp2];const p=(((t-g[0])/g[1])%1+1)%1;return Math.exp(-p*5)}
+// ---- assets -------------------------------------------------------------
+const IM={};let total=0,done=0;
+function load(u){if(IM[u])return IM[u];total++;return IM[u]=new Promise(r=>{const i=new Image();i.onload=()=>{done++;prog_();r(i)};i.onerror=()=>{done++;prog_();console.warn('missing',u);r(null)};i.src=u})}
+let onP=null;function prog_(){onP&&onP(total?done/total:0)}
+// ---- memory shots (composites 640x360) ------------------------------------
+const AN_CAT=[[22,69,83,46],[23,70,81,47],[21,66,85,44],[19,67,80,45],[20,71,84,36],[27,29,25,28],[26,28,25,29],[24,23,22,19]];
+const SHOT={};let A2,ATL,BGI=[],VNI=[],MONI={};const ART={};
+function cover(g,im,w,h,top){const r=Math.max(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;g.drawImage(im,(w-dw)/2,top?0:(h-dh)*.85,dw,dh)}
+function newC(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function box(g,w,h){g.fillStyle='rgba(28,18,40,.74)';g.beginPath();g.roundRect(w*.05,h*.70,w*.90,h*.25,10);g.fill();g.strokeStyle='rgba(255,190,215,.75)';g.lineWidth=2;g.stroke();
+  g.fillStyle='rgba(255,170,205,.9)';g.beginPath();g.roundRect(w*.07,h*.655,w*.17,h*.07,8);g.fill();
+  g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.roundRect(w*.08,h*.775,w*.70,h*.028,4);g.fill();g.beginPath();g.roundRect(w*.08,h*.835,w*.52,h*.028,4);g.fill()}
+function shotCombat(a,idx){const k='c'+a+'_'+idx;if(SHOT[k])return SHOT[k];const w=640,h=360,c=newC(w,h),g=c.getContext('2d'),fy=FY[a]*h;
+  cover(g,BGI[a],w,h);
+  const key=K[a],m=MON[key],boss=idx===19,r=m[2][idx],at=MONI[key];
+  if(at){let hh=h*(boss?.70:.40),sc=hh/r[3];if(r[2]*sc>w*.40){sc=w*.40/r[2];hh=r[3]*sc}g.imageSmoothingEnabled=false;g.drawImage(at,r[0],r[1],r[2],r[3],w*.70-r[2]*sc/2,fy-hh,r[2]*sc,hh)}
+  const f=FR[61],cs=h*.5/206;g.imageSmoothingEnabled=false;g.drawImage(ATL,f[0],f[1],f[2],f[3],w*.27-f[2]*cs/2,fy-f[3]*cs,f[2]*cs,f[3]*cs);
+  g.fillStyle='rgba(20,12,30,.7)';g.fillRect(w*.04,h*.05,w*.28,h*.05);g.fillRect(w*.68,h*.05,w*.28,h*.05);
+  g.fillStyle='#7fe08f';g.fillRect(w*.045,h*.057,w*.27*.8,h*.036);g.fillStyle='#f06a6a';g.fillRect(w*.685,h*.057,w*.27*(boss?.6:.45),h*.036);
+  box(g,w,h);return SHOT[k]=c}
+function shotVN(a){const k='v'+a;if(SHOT[k])return SHOT[k];const w=640,h=360,c=newC(w,h),g=c.getContext('2d');
+  cover(g,VNI[a],w,h,true);const d=D2[AN_CAT[a][0]],q=h*.9/414;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  g.drawImage(A2,d[0],d[1],d[2],d[3],w*.72-d[4]*q,h*1.0-d[3]*q,d[2]*q,d[3]*q);box(g,w,h);return SHOT[k]=c}
+function shot(p){if(p.kind==='combat')return shotCombat(p.area,p.idx);if(p.kind==='vn')return shotVN(p.area);
+  const k='a'+p.src;if(SHOT[k])return SHOT[k];const im=ART[p.src];if(!im)return null;const c=newC(640,360);cover(c.getContext('2d'),im,640,360,true);return SHOT[k]=c}
+// ---- gallery pictures sorted by area (story CGs + endings incl. bad ones; story_01 is saved for the finale)
+const GAL=[['story/story_02','story/story_03','story/story_04','endings/ending_bad'],
+ ['story/story_05','story/story_06','endings/ending_bad_mush'],['story/story_07','story/story_08'],
+ ['story/story_09','endings/ending_bad_swamp'],['story/story_10','story/story_11'],
+ ['endings/ending_bad_cult'],['story/story_12','story/story_13']];
+const EVN=a=>['mush','mimic','cult','mimicbad'].concat([0,1,3,5].includes(a)?['bridge']:[]).map(s=>`events/${s}_${K[a]}`);
+const hash=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
+function itemsFor(a,n){const E=EVN(a).map(s=>({kind:'art',area:a,src:s})),V=[{kind:'vn',area:a}].concat(GAL[a].map(s=>({kind:'art',area:a,src:s}))),
+  C=[...Array(20).keys()].sort((x,y)=>hash(x*3.1+a*17)-hash(y*3.1+a*17)).map(i=>({kind:'combat',area:a,idx:i})),L=[C,E,V],ptr=[0,0,0],out=[];let k=0;
+  while(out.length<n&&k<400){const j=k%3;k++;if(ptr[j]<L[j].length)out.push(L[j][ptr[j]++])}return out}
+function tAtP(p){for(let t=0;t<=DUR;t+=.02)if(Pos(t)>=p-1e-9)return t;return DUR}
+// snapshot windows: only while the area itself is on screen; none during the transitions between areas
+const WIN=[{i:HOLD[0],o:tAtP(.3)}];for(let a=1;a<=6;a++)WIN.push({i:tAtP(a-.3),o:tAtP(a+.3)});WIN.push({i:tAtP(6.72),o:221.0});
+const SPAWN=a=>{const w=WIN[a],iv=a===6?1.7:1.9,s0=w.i+(a===0?.3:.25),n=Math.max(0,Math.floor((w.o-3.0-s0)/iv)+1);return Array.from({length:n},(_,k)=>s0+k*iv)};
+const MEM=[];(function(){let n=0;const push=(t,it,life)=>{MEM.push(Object.assign({t0:t,life:life,n:n,slot:[0,2,4,1,5,3][n%6],j:[hash(n+.1),hash(n+.2),hash(n+.3)]},it));n++};
+  const sp=[...Array(8).keys()].map(SPAWN),fi=itemsFor(0,sp[0].length+sp[7].length);
+  for(let a=0;a<8;a++){const ENDSEQ=['demon_lord','angel','normal','sad','wedding'].map(e=>({kind:'art',area:6,src:'endings/ending_'+e}));
+    const items=a===6?itemsFor(6,sp[6].length-5).concat(ENDSEQ):a===0?fi.filter((_,q)=>q%2===0):a===7?fi.filter((_,q)=>q%2===1):itemsFor(a,sp[a].length);
+    sp[a].forEach((t,k)=>{if(items[k])push(t,items[k],a===6?7:Math.min(7,WIN[a].o-t))})}
+  const reg=MEM.filter(m=>m.t0<201),FL=[];   // flood: 12 recap pictures taken from the whole sequence
+  for(let a=0;a<6;a++){const ra=reg.filter(m=>m.area===a),art=ra.filter(m=>m.kind==='art'),oth=ra.filter(m=>m.kind!=='art'),pick=[art[0],a%2?art[art.length-1]:oth[0]];pick.forEach((m,q)=>{if(m)FL.push({kind:m.kind,area:m.area,idx:m.idx,src:m.src})})}
+  FL.sort((x,y)=>hash(x.area*9.7+(x.src||'').length)-hash(y.area*9.7+(y.src||'').length));
+  FL.forEach((it,q)=>push(201.9+.3*q,Object.assign(it,{px:(.04+hash(q*5.1)*.72)*W,py:(.05+hash(q*7.7)*.36)*H,sz:.20}),5.0));
+  push(220.4,{kind:'art',area:7,src:'story/story_01',px:.33*W,py:.06*H,sz:.30},6.6);   // final picture: the cat sleeping in the forest
+  MEM.sort((x,y)=>x.t0-y.t0)})();
+const SLX=[.05,.36,.66,.20,.52,.78],SLY=[.07,.05,.12,.27,.30,.24];
+const FILT='filter' in CanvasRenderingContext2D.prototype;
+// ---- drawing -------------------------------------------------------------
+const g=cv.getContext('2d');let strips=[];
+function buildStrips(){for(let k=1;k<8;k++){const c=newC(OV,Math.round(TILE_H)),x=c.getContext('2d'),im=BGI[k%7===0&&k===7?0:k];
+  const sw=OV/TILE_W*im.width;x.drawImage(im,0,0,sw,im.height,0,0,OV,c.height);
+  x.globalCompositeOperation='destination-in';const gr=x.createLinearGradient(0,0,OV,0);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,1)');x.fillStyle=gr;x.fillRect(0,0,OV,c.height);strips[k]=c}}
+function tileImg(k){return BGI[k===7?0:k]}
+function drawWorld(P){const cx=P*S+TILE_W/2,left=cx-W/2;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+  for(let k=0;k<8;k++){const L=k*S;if(L+TILE_W<left||L>left+W)continue;const im=tileImg(k),top=FLOORY-FY[k]*TILE_H,sx=L-left;
+    if(k===0)g.drawImage(im,sx,top,TILE_W,TILE_H);
+    else{const f=OV/TILE_W;g.drawImage(im,im.width*f,0,im.width*(1-f),im.height,sx+OV,top,TILE_W-OV,TILE_H);g.drawImage(strips[k],sx,top)}}
+  return cx}
+function catState(t,P){
+  const i=seg(t),mv=moving(t);let x=CAT_X0,frame,alt=0,bob=0,mode='idle';
+  const sky=sm((P-3.3)/.28)*(1-sm((P-4.62)/.28));
+  if(t>=HOME0){const u=Math.min(1,(t-HOME0)/3.4);x=CAT_X0+(CAT_X1-CAT_X0)*eio(u)}
+  if(t>=SLEEP0){mode='sleep';frame=38+Math.min(7,Math.floor((t-SLEEP0)/.23))}
+  else if(t>=HOME0&&t<HOME1){mode='walk';frame=Math.floor(t/(2*BP)*10)%10}
+  else if(t>=HOME1){mode='idle';frame=20+Math.floor(t*1000/150)%9}
+  else if(t>=EXC0&&t<HOLD[6]){mode='excited';frame=29+Math.min(8,Math.floor((t-EXC0)/.1))}
+  else{
+    let mvs=0;if(mv){const d=1/3.2,t0=HOLD[i],t1=TA[i+1];mvs=Math.min(sm((t-t0)/1.2),sm((t1-t)/1.2))}
+    if(sky>.12){const fl=mv&&mvs>.25;mode=fl?'fly':'float';frame=fl?227+Math.floor(t/BP*6)%6:215+Math.floor(t/BP*6)%6;
+      alt=sky*(28+(67-28)*sm(mvs*1.4));bob=sky*Math.sin(t*Math.PI/BP)*3.5}
+    else if(mv){mode='walk';frame=Math.floor(t/(2*BP)*10)%10}
+    else{mode='idle';frame=20+Math.floor(t*1000/150)%9}}
+  return{x,frame,alt,bob,mode,sky}}
+function drawCat(c){const f=FR[c.frame],s=CAT_S*H/720,w=f[2]*s,h=f[3]*s,fy=FLOORY+8;
+  g.save();g.globalAlpha=.30*(1-Math.min(1,c.alt/90));g.fillStyle='#000';g.beginPath();g.ellipse(c.x,fy+2,w*.36*(1-c.alt/260),9*s/1.2,0,0,7);g.fill();g.restore();
+  g.imageSmoothingEnabled=false;g.drawImage(ATL,f[0],f[1],f[2],f[3],Math.round(c.x-w/2),Math.round(fy-h-(c.alt+c.bob)*s),w,h)}
+function drawMem(t,cx,en){
+  for(const p of MEM){const age=t-p.t0;if(age<0||age>p.life)continue;const im=shot(p);if(!im)continue;
+    const pw=(p.sz||.236)*W,ph=pw*.5625,pad=pw*.036,ow=pw+pad*2,oh=ph+pad+pw*.13;
+    const bx=p.px!==undefined?p.px:(SLX[p.slot]+(p.j[0]-.5)*.05)*W,by=p.py!==undefined?p.py:(SLY[p.slot]+(p.j[1]-.5)*.04)*H;let cxp=bx+ow/2,cyp=by+oh/2;
+    const hold=Math.min(1.5,.25*p.life),u=eio((age-hold)/(p.life-hold)),pop=sm(age/.5);
+    const sc=(1+.16*(1-pop))*(1-.72*u)*(1+.012*beat(t)*(1-u)*(.5+en)),al=pop*(1-sm((u-.18)/.82)),ang=(p.j[2]-.5)*.12*(1-u*.5);
+    const vx=.64*W,vy=.43*H;cxp+=(vx-cxp)*u*.82;cyp+=(vy-cyp)*u*.82;cxp-=(Pos(t)-Pos(p.t0))*S*.16;
+    g.save();g.globalAlpha=al;g.translate(cxp,cyp);g.rotate(ang);g.scale(sc,sc);
+    if(FILT&&u>.05)g.filter=`sepia(${.22+.35*u}) blur(${(u*5).toFixed(1)}px)`;
+    else if(FILT)g.filter='sepia(.22)';
+    if(u<.3){g.shadowColor='rgba(0,0,0,.45)';g.shadowBlur=16*(1-u/.3)}
+    g.fillStyle='#f6f0e4';g.fillRect(-ow/2,-oh/2,ow,oh);g.shadowBlur=0;g.shadowColor='transparent';
+    g.drawImage(im,-pw/2,-oh/2+pad,pw,ph);g.fillStyle='rgba(255,230,200,.10)';g.fillRect(-pw/2,-oh/2+pad,pw,ph);
+    g.restore()}}
+function drawMotes(t,cx,en,P){const a=Math.round(P),emb=(a===5||a===6),n=Math.floor(90*(.35+.65*en)),c=TINT[Math.min(7,a)];
+  g.save();g.globalCompositeOperation='lighter';
+  for(let i=0;i<n;i++){const hx=hash(i+1),hy=hash(i+91),hs=hash(i+171),sp=8+hs*22;
+    let x=((hx*(W+80)-cx*.34*(.4+hs)-t*sp*(emb?.4:1))%(W+80)+(W+80))%(W+80)-40,y;
+    if(emb)y=((hy*H-t*(14+hs*34))%H+H)%H;else y=hy*H*.85+Math.sin(t*.6+i)*14;
+    const tw=.5+.5*Math.sin(t*(1.2+hs*2)+i*3),r=1+hs*2.4;
+    g.fillStyle=`rgba(${Math.min(255,c[0]+90)},${Math.min(255,c[1]+90)},${Math.min(255,c[2]+90)},${(.14+.5*tw*en+.08)*(emb?1:.8)})`;g.beginPath();g.arc(x,y,r,0,7);g.fill()}
+  g.restore()}
+function drawSparks(t){if(t<EXC0||t>EXC1+.9)return;const u=(t-EXC0)/1.8;g.save();g.globalCompositeOperation='lighter';
+  for(let i=0;i<14;i++){const a=i/14*6.283+hash(i)*.6,r=40+u*160*(.6+hash(i+3)),x=CAT_X0+Math.cos(a)*r,y=FLOORY-130+Math.sin(a)*r*.7-u*30;
+    g.fillStyle=`rgba(255,${210+hash(i)*40|0},140,${(1-u)*.9})`;g.save();g.translate(x,y);g.rotate(u*3+i);g.fillRect(-4,-1.2,8,2.4);g.fillRect(-1.2,-4,2.4,8);g.restore()}
+  g.restore()}
+function drawZ(t){if(t<SLEEP0+1.2)return;for(let i=0;i<4;i++){const u=(((t-SLEEP0-1.2)/2.6)+i/4)%1,x=CAT_X1+40+u*50+Math.sin(u*6+i)*8,y=FLOORY-70-u*150;
+  g.save();g.globalAlpha=Math.min(1,u*5)*(1-u)*.9;g.fillStyle='#fff';g.font=`bold ${22+u*26|0}px system-ui`;g.fillText('z',x,y);g.restore()}}
+function grade(t,P,en){const a=Math.floor(Math.min(6.999,P)),f=P-a,c0=TINT[a],c1=TINT[a+1],c=c0.map((v,i)=>v+(c1[i]-v)*sm(f));
+  g.save();g.globalCompositeOperation='soft-light';g.fillStyle=`rgba(${c|0},${c[1]|0},${c[2]|0},.6)`.replace(`${c|0},`,`${c[0]|0},`);g.fillRect(0,0,W,H);g.restore();
+  g.save();g.globalCompositeOperation='screen';g.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${.04+.05*beat(t)*en})`;g.fillRect(0,0,W,H);g.restore();
+  const v=g.createRadialGradient(W/2,H*.5,H*.35,W/2,H*.5,H*.95);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(8,4,16,${.62-.28*en})`);g.fillStyle=v;g.fillRect(0,0,W,H);
+  if(t>=TA[6]&&t<TA[6]+1.4){g.fillStyle=`rgba(255,255,255,${.5*(1-(t-TA[6])/1.4)})`;g.fillRect(0,0,W,H)}
+  if(Math.abs(t-203)<.6){g.fillStyle=`rgba(255,240,220,${.16*(1-Math.abs(t-203)/.6)})`;g.fillRect(0,0,W,H)}
+  const fo=Math.max(0,Math.min(1,(t-0)/1.5));if(fo<1){g.fillStyle=`rgba(0,0,0,${1-fo})`;g.fillRect(0,0,W,H)}
+  ending(t)}
+function ending(t){const T0=224.0,T1=226.5,T2=226.3;let v=0;
+  if(t>T2)v=sm((t-T2)/(DUR-T2-.1));
+  if(t>T0){const u=sm((t-T0)/(T1-T0)),cx=CAT_X1,cy=FLOORY-60,R=H*(.95-.72*u);
+    const gr=g.createRadialGradient(cx,cy,R*.25,cx,cy,R);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,`rgba(0,0,0,${Math.min(1,.02+.98*u)})`);g.fillStyle=gr;g.fillRect(0,0,W,H);
+    g.save();g.globalCompositeOperation='lighter';const gl=g.createRadialGradient(cx,cy,0,cx,cy,R*.7);gl.addColorStop(0,`rgba(255,236,205,${.16*u*(1-v)})`);gl.addColorStop(1,'rgba(255,236,205,0)');g.fillStyle=gl;g.fillRect(0,0,W,H);g.restore()}
+  if(v>0){g.fillStyle=`rgba(0,0,0,${v})`;g.fillRect(0,0,W,H)}}
+let DBG=opt.dbg!==false;
+function render(t){
+  const P=Pos(t),en=energy(t);
+  const cx=drawWorld(P);drawMem(t,cx,en);const c=catState(t,P);drawCat(c);drawSparks(t);drawMotes(t,cx,en,P);grade(t,P,en);
+  if(DBG&&t<224){const i=Math.min(7,Math.round(P));g.save();g.font='600 18px system-ui';g.fillStyle='rgba(255,255,255,.85)';g.shadowColor='#000';g.shadowBlur=4;
+    g.fillText(`${i+1}. ${NM[i]} · ${c.mode}`,24,H-52);g.restore()}
+}
+async function loadAll(onProg){onP=onProg||null;
+  const bg=K.slice(0,7).map(k=>load(`assets/backgrounds/bg_${k}.webp`)),vn=K.slice(0,7).map(k=>load(`assets/vn_backgrounds/vn_${k}.webp`));
+  const evp=[...new Set(MEM.filter(m=>m.kind==='art').map(m=>m.src))].map(s=>load(`assets/${s}.webp`).then(i=>ART[s]=i));
+  const mp=K.slice(0,7).map(k=>load(`assets/monsters/${k}.webp`).then(i=>MONI[k]=i));
+  const [a1,a2]=[load('assets/pixel/atlas_pixel.webp'),load('assets/anime/atlas_anime.webp')];
+  BGI=await Promise.all(bg);VNI=await Promise.all(vn);await Promise.all(evp);await Promise.all(mp);ATL=await a1;A2=await a2;
+  buildStrips();onP=null}
+return{render,loadAll,DUR,W,H,setDbg:v=>{DBG=!!v}}}
+/* ---------- memory lane clip (build 50) ----------
+After the WEDDING ending's synopsis (the ending screen), but ONLY THE FIRST TIME EVER (saved flag cg_ml, set when the clip has played to the end; delete it to see the clip again), the button no longer goes straight to the title: it opens the black s_ml screen with "Tap to start" (a tap is needed so the browser allows the sound), then the clip plays through once (no skip, no controls) and returns to the title screen. The song is a normal BGM (key memlane in the BGM table, assets/bgm/memory_lane.mp3, -18 LUFS, 96 kbps, not looped) so it follows the BGM slider (cg_bgm). The visuals are a pure function of the song time (bgmA.currentTime), built by the MemLane engine below; the same engine runs memory_lane_draft.html. If the pictures cannot load the clip is skipped and the game goes to the title. */
+const ML_META={"arrive":[0,27.7,50.0,81.25,115.85,140.6,184.25,219.05],"dur":227.73,"bp":0.841,"ph1":0.24,"bp1":0.844,"ph2":0.23,"bp2":0.8385,"E":"010304050505050506060707080809101111111111111010101012131414131215182328303131302927262423242424252423232627282623242731323130282725273136394344434340394142424342414240393939404346454545454545434446474848464647505049454240403939394041403939393837343127252424252627282725222635425050453727252429333740424040383638393935353638393631262421171518232529313031282525262525242629272521202530292823161210091213151921262932313233343636353535343536374046504843372827272625231918181718161414202834373733292723201820232628293028262320201714110909101213141623273138455053514642414144485151535046443734373740414041414040403837363738353434353635323535353839434748474747495051484339363845495147444346474540414345494747484647454139363436414652565755504436384346474747474946454749504641373537373836353736363734363737383737373739434649545556575457606160503930232638414442333538414745414240414442403938394145475048474643484850535049474849525251565860615958585449444144475254545655525251494947444544424343454645454646475053555756575858606162625857555960575348454748484850515354545558616261565251485255535654474743394649536262596057575858575859565554575957595758616162606159575958565554525053545659585756575756545354545657565858596160565352555959595958605755555253525053565961636256555355565657555654504952535861595852515760646460606061616160606263616263646768666769696560565559636262605959576061636767666359565659626257535252586262625751494849504848474747464243424141393942434342393937373737384038373533353639414344454850525254575656535049474650515152474749464748465151505250515453535247464543464749525150484848505151504950525456575654515049505152515251525454555960605852504744434342413734393838454343423738394043465054545454535354535247454544454647484739353842485454545148484648494949525052575760615755525148464444454344414247475255535349494950505049474748525655575755544945464646515255565352514854555560616364636161636467707474727267646154504642414039383632353740454344434241393533343537343033374456575855494950504844373534364143444442403939393838394041444239383645556063636161636161605760595963616669686967636158586263636564666862616265727267636162656563636364666364656467676765625960657073747469656562615847403329313233363635342823263135363534343437363637404244434553566160555450474442424745475149515048474845413528333842474644454453657379777267666767686766646363646464646667697169676665676865656565635955545354565557616265687073747373716862616265666358505047424444446064666962636467686767636263666767696870716868686765636058575858596165666870687073737370666465676969717068706968656666686964626164666567625859555864697271696362636668666663636561596061666766676260666872726764626263656971716862626366717272747676736966646769686866656766696968696971717170707377807674706569707272666260646871727169687269697268727575777775747170747476777372717071727071727273767677787878777876726967697072716866636158636565696563666364666364635961636467676772706869656567677071747577787473717069686868706969706865666465676668707272727373757677777472717174727170666764606159616562646363677172737269686359636771747268666566677173737274747270686769707271717369656766676864646668707171696865676870767472706566687175726869707681767369677073757779828282807978808074757472807878808078736866697073727378787775737374727370676860575454566366697168707272767675757066686363686977818283827673727378797878767675737576767674737271747679838179787675777676818383817674747681807984828386848384868382797981818379798078818180828179827978807879797778787981848788889092929591838278727265555246444341393841383636353738383838393839384038374038373734333130293033333435353432282524222119222628292626262425252224303340424354616872676567707578777675757779767981818480777981869089868073767880848180828388909089858381798284869192919493888987899392929194959389888989939293959288868387898789878486858790939495928683798181798486858986838285889092878585899086868487909091918987838384818080767882808585777874809297999998959491929695999995999797999999999591929294959397989898959494989894888688899695929693969999999999989187868892939292888173645652484745434241424141403939404140394040404039383839434751698192999999999999999997959497979698959493929596999793909190909286909388878685929593928787898790898490898691878692919189878790949695959793898888929799999595959799999897999292979699999997938990939498959495919193959999999999999999999999999795949395969898939492949899999993837159524539343534323228262624232526272726272727272727313537404040434445464444444545454340373432312825221814110808080808070605030302020101000000000000000000"};
+let lastEnd=null,mlE=null,mlRun=false,mlT0=0,mlRaf=0,mlClock=false;
+function endBack(){if(lastEnd==='wedding'&&!ls.get('cg_ml',0)){memLane()}else{lastEnd=null;show('menu');refreshMenu()}}
+function memLane(){show('ml');const tap=$('ml_tap');tap.style.display='flex';tap.textContent='…';tap.onclick=null;
+  if(!mlE)mlE=MemLane($('ml_cv'),{FR,D2,MON},ML_META,{dbg:false});
+  mlE.loadAll().then(()=>{mlE.render(0);tap.textContent=t('mlTap');tap.onclick=mlStart}).catch(()=>mlEnd())}
+function mlStart(){const tap=$('ml_tap');tap.onclick=null;tap.style.display='none';bgmHeld=false;bgmPlay('memlane');mlT0=performance.now();mlClock=false;mlRun=true;
+  const loop=()=>{if(!mlRun)return;const wall=(performance.now()-mlT0)/1000;let tt=bgmA.currentTime;
+    if(wall>2.5&&tt<.05)mlClock=true;           /* sound blocked or not started: run on the wall clock */
+    if(mlClock)tt=wall;
+    try{mlE.render(Math.min(tt,mlE.DUR))}catch(e){mlEnd();return}   /* fail-safe: a drawing error must never trap the player in a clip that cannot be skipped */
+    if(tt>=mlE.DUR-.03){ls.set('cg_ml',1);mlEnd();return}
+    mlRaf=requestAnimationFrame(loop)};
+  mlRaf=requestAnimationFrame(loop)}
+function mlEnd(){mlRun=false;cancelAnimationFrame(mlRaf);bgmStop();lastEnd=null;show('menu');refreshMenu()}
 /* ---------- menus ---------- */
 function toName(){document.querySelector('#s_name h2').textContent=t('new')+(cleared()?'+':'');show('name')}
 function fresh(){return{name:($('n_name').value||'Main character').trim()||'Main character',g:$('n_g').value,diff:+$('n_d').value,lvl:1,xp:0,hp:40,mhp:40,mp:15,mmp:15,atk:6,gold:30,pot:2,eth:1,wp:1,eq:1,sk:[],own:{'1-0':1},ew:'1-0',pa:0,inv:{pot:2,eth:1},tl:{},parts:{},cooked:0,prog:0,x:null,ng:cleared()}}
