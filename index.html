@@ -223,7 +223,7 @@ button{white-space:nowrap}
 #dlgb button:hover{filter:brightness(1.12)}#dlgb button:active{transform:translateY(.15em)}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 52</div>
+<div class="s c on" id="s_menu"><h1>🐱 Cat Girl RPG</h1><div style="opacity:.6;font-size:13px">build 54</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -541,7 +541,7 @@ function showCh(l){const box=$('vn_ch'),seen=ls.get('cg_seen2',{}),done=ls.get('
   l.ch.forEach((c,i)=>{const b=document.createElement('button'),k=curL+'#'+i;if(seen[k]){b.className='seen';b.innerHTML=icon(c[4])}b.style.padding='.55em .8em';b.append(c[0]);
    if((c[3]||'').includes('l')&&!castleEnds.every(x=>done.includes(x))){b.disabled=true;b.append(' (locked)')}
    b.onclick=()=>{const go=()=>{seen[k]=1;ls.set('cg_seen2',seen);box.innerHTML='';
-    if(c[2])return endGo(c[2]);curL=c[1];Q=tierMix(c[1],SC[c[1]]);qi=0;step()};if((c[3]||'').includes('w'))ask('This ending closes the run. Manual saves are wiped, and the autosave becomes a New Game+ start that keeps your gold, items, shop upgrades and stats (but not weapons). Continue?',go,null,'Continue','Cancel');else go()};box.appendChild(b)})}
+    if(c[2])return endGo(c[2]);curL=c[1];if(CG[c[1]]){const g=String(CG[c[1]]).padStart(2,'0');$('vn_st').style.background=CGFIT[CG[c[1]]]?`url(assets/story/story_${g}.webp) center/contain no-repeat,${CGFIT[CG[c[1]]]}`:`url(assets/story/story_${g}.webp) center top/cover,#222`;$('vn_sp').style.display='none';vnCat=false;seenG('story/story_'+g)}Q=tierMix(c[1],SC[c[1]]);qi=0;step()};if((c[3]||'').includes('w'))ask('This ending closes the run. Manual saves are wiped, and the autosave becomes a New Game+ start that keeps your gold, items, shop upgrades and stats (but not weapons). Continue?',go,null,'Continue','Cancel');else go()};box.appendChild(b)})}
 /* ---- build 34: run tiers. Dialogue changes after each castle ending, for the player and the cat girl alike, and freezes once every castle ending is cleared ---- */
 const CASTLE=['normal','angel','demon','sad','wedding'];
 const allCast=u=>CASTLE.every(x=>u.includes(x));
@@ -965,9 +965,9 @@ function settings(){ov(`<h2>${t('set')}</h2><label>Language <select onchange="la
 /* in-game dialog (replaces confirm()/alert(), which make the browser leave full screen) */
 function ask(m,yes,no,yl,nl){const d=$('dlg'),y=$('dlg_y'),n=$('dlg_n'),c=()=>d.classList.remove('on');$('dlg_m').textContent=m;y.textContent=yl||'Yes';n.textContent=nl||'No';n.style.display=nl===null?'none':'';y.onclick=()=>{c();yes&&yes()};n.onclick=()=>{c();no&&no()};d.classList.add('on')}
 const LANGS=[['en','English'],['ja','日本語'],['zh','简体中文']];
-const LANGMSG={en:['Change the language to English? The game will restart, and progress that is not saved will be lost.','Restart','Cancel'],ja:['言語を日本語に変更しますか？ ゲームが再起動し、セーブしていない進行状況は失われます。','再起動','キャンセル'],zh:['要把语言更改为简体中文吗？游戏将重新启动，尚未存档的进度会丢失。','重新启动','取消']};
+const LANGMSG={en:['Change the language to English? The game will restart. If you are in the middle of a run, it is autosaved first.','Restart','Cancel'],ja:['言語を日本語に変更しますか？ ゲームが再起動します。プレイ中の場合は、先にオートセーブされます。','再起動','キャンセル'],zh:['要把语言更改为简体中文吗？游戏将重新启动。如果正在游玩，会先自动存档。','重新启动','取消']};
 const langOpts=()=>LANGS.map(([c,n])=>`<option value="${c}" ${c==lang?'selected':''}>${n}</option>`).join('');
-function langPick(v,back){if(v===lang)return;const m=LANGMSG[v];ask(m[0],()=>{ls.set('cg_lang',v);location.reload()},()=>{back&&back()},m[1],m[2])}
+function langPick(v,back){if(v===lang)return;const m=LANGMSG[v];ask(m[0],()=>{try{if(S&&($('s_map').classList.contains('on')||$('s_ex').classList.contains('on')))autosave()}catch(e){}ls.set('cg_lang',v);location.reload()},()=>{back&&back()},m[1],m[2])}
 function exitG(){ask('Exit the game?',()=>{try{window.close()}catch(e){}ask('Thanks for playing! If the game did not close by itself, you can close this tab or app yourself.',null,null,'Back to menu',null)},null,'Exit','Stay')}
 /* ---------- map / explore ---------- */
 addEventListener('resize',()=>{if($('s_map').classList.contains('on'))sz($('m_cat'),.2)});

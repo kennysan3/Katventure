@@ -38,7 +38,7 @@ function T(k,d){
 }
 function tr(s){
   if(typeof s!=='string')return s;
-  var m=/^(\s*)([\s\S]*?)(\s*\u25bc?\s*)$/.exec(s),k=m[2];
+  var m=/^([\s\u2605\u2714\u{1F512}\ufe0f]*)([\s\S]*?)([\s\u25bc\u2605\u2714\u{1F512}\ufe0f]*)$/u.exec(s),k=m[2];
   if(!k)return s;
   var r=T(k,0);
   return r===k?s:m[1]+r+m[3];
