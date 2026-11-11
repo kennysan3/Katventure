@@ -227,7 +227,7 @@ button{white-space:nowrap}
 .tabs2{display:grid;grid-template-columns:1fr 1fr;gap:.3em}.tabs2 button{font-size:.7em;padding:.3em .4em}.tabs2 button.on{outline:.18em solid #ffb3d9}
 </style></head><body><div id="app">
 
-<div class="s c on" id="s_menu"><h1><svg class="tpaw" viewBox="0 0 64 64" aria-hidden="true"><g fill="currentColor"><ellipse cx="32" cy="41" rx="14" ry="11.5"/><ellipse cx="12" cy="29" rx="6" ry="8" transform="rotate(-20 12 29)"/><ellipse cx="25" cy="15" rx="6.5" ry="9" transform="rotate(-8 25 15)"/><ellipse cx="39" cy="15" rx="6.5" ry="9" transform="rotate(8 39 15)"/><ellipse cx="52" cy="29" rx="6" ry="8" transform="rotate(20 52 29)"/></g></svg> Katventure</h1><div style="opacity:.6;font-size:13px">build 59</div>
+<div class="s c on" id="s_menu"><h1><svg class="tpaw" viewBox="0 0 64 64" aria-hidden="true"><g fill="currentColor"><ellipse cx="32" cy="41" rx="14" ry="11.5"/><ellipse cx="12" cy="29" rx="6" ry="8" transform="rotate(-20 12 29)"/><ellipse cx="25" cy="15" rx="6.5" ry="9" transform="rotate(-8 25 15)"/><ellipse cx="39" cy="15" rx="6.5" ry="9" transform="rotate(8 39 15)"/><ellipse cx="52" cy="29" rx="6" ry="8" transform="rotate(20 52 29)"/></g></svg> Katventure</h1><div style="opacity:.6;font-size:13px">build 63</div>
 <div class="col"><button id="b_new" data-i="new" onclick="toName()"></button><button id="b_cont" onclick="cont()"></button><button data-i="gal" onclick="gallery()"></button><button data-i="set" onclick="settings()"></button><button data-i="exit" onclick="exitG()"></button></div></div>
 
 <div class="s c" id="s_name"><h2 data-i="new"></h2><div class="col">
@@ -412,6 +412,15 @@ SC.cook=P(['m:Stand back. You will waste the ingredients, {cat}.','c:But I am hu
 const vnBG=(i,cat)=>({fn:()=>{$('vn_st').style.background=bgs(i,1);const sp=$('vn_sp');sp.style.display=cat?'':'none';vnCat=!!cat;if(cat){szA(sp,.66);an.play('idle')}seenG('vn_backgrounds/vn_'+K[i])}});
 const CI=(t,f)=>({w:'k',t,if:f});
 const vnCG=id=>({fn:()=>{$('vn_st').style.background=`url(assets/${endP(id)}.webp) center top/cover,#222`;$('vn_sp').style.display='none';vnCat=false}});
+/* boss death scenes (build 62): short dialogue, then the shared bad ending screen */
+SC.end_bad_chimera=[vnBG(0,1)].concat(P(['k:(The chimera pins her down. It is purring. This is somehow worse.)','c:[tired]It is so soft... but also so heavy, nya...','m:I said fight it, not hug it.']),[{end:'bad_chimera'}]);
+SC.end_bad_drake=[vnBG(1,1)].concat(P(['k:(The drake\'s tail sweeps her off her feet and into the dark.)','c:[shy]The rock lizard won... nya...','m:Next time we bring a torch. And a plan.']),[{end:'bad_drake'}]);
+SC.end_bad_dragon=[vnBG(2,1)].concat(P(['k:(The dragon opens its mouth very wide.)','c:[angry]Wait, wait, I am not a snack!','m:...I think it disagrees.']),[{end:'bad_dragon'}]);
+SC.end_bad_colossus=[vnBG(3,1)].concat(P(['k:(The colossus rises. The ground shakes. Then it stops shaking.)','c:[tired]Is it over, {name}?','m:For us. Yes.']),[{end:'bad_colossus'}]);
+SC.end_bad_manticore=[vnBG(4,1)].concat(P(['k:(A shadow crosses the sun. The manticore dives.)','c:[angry]It is not a kitty! Why does everyone say it is a kitty?','m:Nobody said that. Brace yourself.']),[{end:'bad_manticore'}]);
+SC.end_bad_titan=[vnBG(5,1)].concat(P(['k:(The titan breathes out. The air turns orange.)','c:[shy]It is very warm in here, nya...','m:That is not warm. That is lava.']),[{end:'bad_titan'}]);
+SC.end_bad_demon=[vnBG(6,1)].concat(P(['k:(The demon lord raises one hand. The castle goes dark.)','c:[sad]I am sorry, {name}. I tried my best.','m:...You did. Rest now.']),[{end:'bad_demon'}]);
+SC.e_mimic_rp=P(['k:(A treasure chest, sitting alone. Its lid is... breathing?)','c:[happy]Shiny! Open it open it!','c:Open sesame!','k:(The lid opens wide. Too wide.)']).concat([{end:'bad_mimic'}]);
 SC.end_angel=[vnBG(6,1)].concat(P(['k:(The cat girl swallows the Angel core in one gulp.)','c:[shy]It tastes like warm clouds... Oh?']),[vnCG('angel')],P(['k:(White wings burst from her back. Her feet leave the floor.)','c:[happy]I have wings now! Seems like heaven is calling. Bye, {name}!','m:Wait! My gold purse is still with you!','k:(She ascends with the purse. It is not coming back down.)']),[vnBG(0,0)],P(['k:(You walk to the nearest town to look for work. Nobody hires the man who claims he beat the demon lord.)','m:I did! Well... she did. With wings. Later.','k:(They laugh. The tavern keeper offers you soup if you stop talking. You do not stop talking.)','k:(Days later, your feet carry you back to the same forest where you found her.)','m:I feel kind of tired... Maybe I will lie down here for a bit.','m:I guess this is the end. Oh well...','k:(A single white feather drifts down and lands on your nose. It is not helping. You close your eyes.)']),[{end:'angel'}]);
 SC.end_demon=[vnBG(6,1)].concat(P(['k:(The cat girl opens the demon lord grimoire. The pages scream, briefly, then go quiet.)','c:[curious]It says the reader gets the throne. Is that good? Sounds good!']),[vnCG('demon')],P(['k:(A crown of black flame settles on her pink hair. The whole castle kneels.)','c:[happy]I am the demon lord now! {name}, you can be my minister of snacks!','m:Is there pay? Sick days? Dental?','c:[happy]There is a dungeon, nya!','k:(You hand in your resignation on day one. She accepts it with tears in her eyes. A very large guard escorts you out.)']),[vnBG(0,0)],P(['k:(Nobody hires the former partner of the demon lord. Not even as a scarecrow. Especially not as a scarecrow.)','m:I have excellent references. One of them is on fire, but still.','k:(After weeks of begging, you find yourself in the forest where it all started. The same field. The same grass.)','m:I feel kind of tired... This ground is surprisingly soft.','m:Not a bad place to end up. Oh well...','k:(Far away, a polite little explosion lights up the sky. Your former employer sends her regards. You close your eyes.)']),[{end:'demon'}]);
 SC.end_sad=[vnBG(6,1)].concat(P(['k:(You touch the Origin stone. Light pours through the cat girl, and her eyes go very far away.)']),[vnCG('sad')],P(['c:[shy]I remember now. I am the last of the god race. And you are from another world, {name}.','m:So that is why none of my chargers work here.','c:[tired]We cannot stay together. If we do, both worlds break.','m:Break? This world is already full of slimes.','k:(She hugs you once, tightly, and fades into gentle light. One quiet nya echoes through the castle.)']),[vnBG(0,0)],P(['k:(Without her, the road to your own world never opens. You knock on the sky a few times. Nobody answers.)','m:Hello? Management? I would like to speak to whoever is in charge of the ending.','k:(You wander back to the forest where you found her. Same field, same spot. No pink hair this time.)','m:I feel kind of tired... This looks like a nice place to sleep.','m:I guess this is the end. Oh well...','k:(A lone cloud shaped like a cat drifts overhead. You are not sure it is a coincidence. You do not live to ask.)']),[{end:'sad'}]);
@@ -735,7 +744,7 @@ function tierMix(k,a){const T=tierN();if(!T||/^(end_|intro$|loot$)/.test(k))retu
  [[PAS,'m'],[CAS,'c']].forEach(([pool,w])=>{if(rnd()<pr){const hi=Math.min(pool.length,4*T),lo=Math.max(0,hi-8),txt=pool[lo+Math.floor(rnd()*(hi-lo))],at=el[Math.floor(rnd()*el.length)];ins.push([at,P(txt.slice(2).split(/ (?=\[\w+\])/).map(s=>txt[0]+':'+s))])}});
  ins.sort((x,y)=>y[0]-x[0]).forEach(([at,o])=>out.splice(at+1,0,...o));return out}
 function endGo(id){const l='end_'+id;endBgm=ENDBG[id]||null;if(endBgm){delete bgmPos[endBgm];bgmHeld=false;bgmPlay(endBgm)}if(SC[l])vn(l);else ending(id)}
-function ending(id){lastEnd=id;const e=EN[id],u=ls.get('cg_end',[]);if(e[2]&&!allCast(u))ls.set('cg_runs',runsN(u)+1);if(!u.includes(id)){u.push(id);ls.set('cg_end',u)}ls.set('cg_plays',ls.get('cg_plays',0)+1);
+function ending(id){lastEnd=id;const e=EN[id],u=ls.get('cg_end',[]);if(e[2]&&!allCast(u))ls.set('cg_runs',runsN(u)+1);if(!u.includes(id)){u.push(id);ls.set('cg_end',u)}ls.set('cg_plays',ls.get('cg_plays',0)+1);if(id==='bad_mimic')mimSync();
   let d=e[1];if(id==='wedding')d=(S.g==='f'?'You slip on the wedding ring and, in a flash of magic, turn into a man. ':'You slip on the wedding ring. ')+'The cat girl cheers, you ascend to godhood together, and you live happily ever after in a small hut in the forest where you met, with five children. Nya!';
   $('end_t').textContent=e[0];const im=$('end_i');im.style.display='';im.onerror=()=>im.style.display='none';const ep=endP(id);im.src='assets/'+ep+'.webp';seenG(ep);$('end_d').textContent=d;$('end_n').textContent=endCnt().join(' / ')+' endings found';
   endBad=id.startsWith('bad');
@@ -962,7 +971,7 @@ function svSlot(n){const go=()=>{S.t=new Date().toLocaleString();save(n);gmenu()
 function ldSlot(n){const a=ls.get('cg_s'+n,null);if(!a)return;cl();if(a.fresh)return toName();loadS(a)}
 function endP(id){if(id==='bad_mimic')return 'events/mimicbad_'+K[X?X.ar:0];const m={bad_mushroom:'bad_mush',bad_cult:'bad_cult',bad_swamp:'bad_swamp',bad_bridge:'bad_swamp'};return 'endings/ending_'+(m[id]||EI[id]||'bad')}
 function seenG(p){const a=ls.get('cg_gal',[]);if(!a.includes(p)){a.push(p);ls.set('cg_gal',a)}}
-function gallery(tab){if(tab==='scn')return galScn();const im=[];for(let i=1;i<=13;i++)im.push('story/story_'+String(i).padStart(2,'0'));['normal','angel','demon_lord','wedding','sad','bad','bad_mush','bad_cult','bad_swamp'].forEach(n=>im.push('endings/ending_'+n));K.forEach(k=>im.push('vn_backgrounds/vn_'+k));K.forEach((k,i)=>{im.push('events/mush_'+k,'events/mimic_'+k,'events/cult_'+k,'events/mimicbad_'+k);if(EVA.bridge.includes(i))im.push('events/bridge_'+k)});const sn=ls.get('cg_gal',[]);
+function gallery(tab){mimSync();if(tab==='scn')return galScn();const im=[];for(let i=1;i<=13;i++)im.push('story/story_'+String(i).padStart(2,'0'));['normal','angel','demon_lord','wedding','sad','bad','bad_mush','bad_cult','bad_swamp'].forEach(n=>im.push('endings/ending_'+n));K.forEach(k=>im.push('vn_backgrounds/vn_'+k));K.forEach((k,i)=>{im.push('events/mush_'+k,'events/mimic_'+k,'events/cult_'+k,'events/mimicbad_'+k);if(EVA.bridge.includes(i))im.push('events/bridge_'+k)});const sn=ls.get('cg_gal',[]);
  ov(`<h2>${t('gal')}</h2>${galTabs('pic')}<div class="hud">${im.filter(p=>sn.includes(p)).length} / ${im.length} unlocked · tap a picture to enlarge · endings found ${endCnt().join(' / ')}</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.5em">${im.map(p=>sn.includes(p)?`<img loading="lazy" src="assets/${p}.webp" style="width:100%;border-radius:.4em;cursor:pointer" onclick="big('${p}')">`:`<div style="aspect-ratio:16/9;background:#222;border-radius:.4em;display:flex;align-items:center;justify-content:center;font-size:2em;opacity:.6">🔒</div>`).join('')}</div><button onclick="cl()">${t('close')}</button>`,1)}
 
 /* ---- build 57: Scenes tab in the Gallery (scene replay). A replay plays ONE segment with the dialogue tier the player picks, never touches saves, endings or progress (a temporary player object stands in for S), then returns to the scene list ---- */
@@ -970,16 +979,21 @@ const TIERL=['Tier 1 \u00b7 First playthrough','Tier 2','Tier 3','Tier 4','Tier 
 const CASTLE_IDS=['normal','angel','demon','sad','wedding'];
 const sPic=n=>'story/story_'+String(n).padStart(2,'0');
 /* ending counter: all endings that share ending_bad.webp count as ONE */
-function endCnt(){const u=ls.get('cg_end',[]),g=badGrp();return [u.filter(x=>!g.includes(x)).length+(u.some(x=>g.includes(x))?1:0),Object.keys(EN).length-g.length+1]}
+function endCnt(){const u=ls.get('cg_end',[]),G=grpAll(),all=[].concat(...G);return [u.filter(x=>!all.includes(x)).length+G.filter(g=>u.some(x=>g.includes(x))).length,Object.keys(EN).length-all.length+G.length]}
 function badGrp(){return Object.keys(EN).filter(id=>endP(id)==='endings/ending_bad')}
+function swpGrp(){return Object.keys(EN).filter(id=>endP(id)==='endings/ending_bad_swamp')}
+function grpAll(){return [badGrp(),swpGrp()]}
+function grpOf(id){return grpAll().find(g=>g.includes(id))||[]}
 function SCN(){const L=[];
  L.push({id:'prologue',g:'story',name:'Prologue',keys:['intro','wake'],chain:['intro'],img:sPic(1),ar:null});
  AR.forEach((a,i)=>L.push({id:'a'+i,g:'story',name:a.n,keys:['a'+i],chain:['a'+i],img:CG['a'+i]?sPic(CG['a'+i]):'vn_backgrounds/vn_'+K[i],ar:i}));
  BO.forEach((b,i)=>{const A=i===2?'dragonA':i===6?'demA':'bA'+i,B=i===2?'dragonB':i===6?'demB':'bB'+i,O=i<6?'o'+i:null,c=CG[A]||CG[B]||(O&&CG[O]);
   L.push({id:'b'+i,g:'boss',name:b.n||b.name,keys:[A,B],chain:O?[A,B,O]:[A,B],img:c?sPic(c):'vn_backgrounds/vn_'+K[i],ar:i})});
- const BG=badGrp();
+ const BG=[].concat(...grpAll());
  CASTLE_IDS.concat(Object.keys(EN).filter(x=>!CASTLE_IDS.includes(x))).forEach(id=>L.push({id:'e_'+id,g:'end',name:EN[id][0],end:id,keys:SC['end_'+id]?['end_'+id]:[],chain:SC['end_'+id]?['end_'+id]:[],img:endP(id),ar:null,syn:EN[id][1],hide:BG.includes(id)}));
- L.push({id:'e_badgrp',g:'end',name:'Bad endings',grp:BG,keys:[],chain:[],img:'endings/ending_bad',ar:null});
+ L.push({id:'e_badgrp',g:'end',name:'Bad endings',grp:badGrp(),keys:[],chain:[],img:'endings/ending_bad',ar:null});
+ L.push({id:'e_swpgrp',g:'end',name:'Swamp and bridge endings',grp:swpGrp(),keys:[],chain:[],img:'endings/ending_bad_swamp',ar:null});
+ {const mm=L.find(x=>x.id==='e_bad_mimic');if(mm){mm.mim=1;mm.chain=['e_mimic_rp'];mm.keys=[]}}
  L.push({id:'ml',g:'ml',name:'Memory lane',keys:[],chain:[],img:'vn_backgrounds/vn_forest',ar:null});
  return L}
 function scnBackfill(){const g=ls.get('cg_gal',[]),e=ls.get('cg_end',[]),T=tierN(),bits=(1<<(T+1))-1,m={},has=p=>g.includes(p),vb=i=>has('vn_backgrounds/vn_'+K[i]),cast=CASTLE_IDS.some(x=>e.includes(x));
@@ -989,25 +1003,28 @@ function scnBackfill(){const g=ls.get('cg_gal',[]),e=ls.get('cg_end',[]),T=tierN
  for(let i=0;i<7;i++)mk('a'+i,A[i]);
  for(let i=0;i<6;i++){const b=i===2?(has('story/story_08')||A[3]):A[i+1];mk(i===2?'dragonA':'bA'+i,b);mk(i===2?'dragonB':'bB'+i,b)}
  mk('demA',cast||has('story/story_13'));mk('demB',cast||has('story/story_13'));
- CASTLE_IDS.forEach(id=>mk('end_'+id,e.includes(id)));
+ CASTLE_IDS.forEach(id=>mk('end_'+id,e.includes(id)));BO.forEach(b=>mk('end_'+b.bad,e.includes(b.bad)));
  return m}
 function scnGet(){let m=ls.get('cg_scn',null);if(!m){m=scnBackfill();ls.set('cg_scn',m)}return m}
 function scnSeen(k){const m=scnGet(),b=1<<tierN();if(!(m[k]&b)){m[k]=(m[k]||0)|b;ls.set('cg_scn',m)}}
-function scnOpen(e){if(e.g==='ml')return !!ls.get('cg_ml',0);if(e.grp)return e.grp.some(x=>ls.get('cg_end',[]).includes(x));if(e.hide)return badGrp().some(x=>ls.get('cg_end',[]).includes(x));if(e.g==='end')return ls.get('cg_end',[]).includes(e.end);const m=scnGet();return e.keys.every(k=>m[k])}
+function scnOpen(e){if(e.g==='ml')return !!ls.get('cg_ml',0);if(e.grp)return e.grp.some(x=>ls.get('cg_end',[]).includes(x));if(e.hide)return grpOf(e.end).some(x=>ls.get('cg_end',[]).includes(x));if(e.g==='end')return ls.get('cg_end',[]).includes(e.end);const m=scnGet();return e.keys.every(k=>m[k])}
 function scnTiers(e){const m=scnGet();let b=63;e.keys.forEach(k=>b&=(m[k]||0));return b||1}
 function galTabs(c){return `<div class="gtabs"><button class="${c==='pic'?'on':''}" onclick="gallery()">${t('tabP')}</button><button class="${c==='scn'?'on':''}" onclick="gallery('scn')">${t('tabS')}</button></div>`}
 function galScn(){const E=SCN().filter(e=>!e.hide),open=E.filter(scnOpen).length,G=[['story','Story'],['boss','Boss encounters'],['end','Endings'],['ml','Memory lane']];
  ov(`<h2>${t('gal')}</h2>${galTabs('scn')}<div class="hud">${open} / ${E.length} unlocked \u00b7 tap a scene to replay</div>`+G.map(([g,n])=>`<h3 class="gh">${n}</h3><div class="sgrid">${E.filter(e=>e.g===g).map(e=>scnOpen(e)?`<div class="scn" onclick="scnPick('${e.id}')"><img loading="lazy" src="assets/${e.img}.webp"><span>${e.name}</span></div>`:`<div class="scn lk"><div class="lkb">\ud83d\udd12</div><span>???</span></div>`).join('')}</div>`).join('')+`<button onclick="cl()">${t('close')}</button>`,1)}
-function scnPick(id){const e=SCN().find(x=>x.id===id);if(!e||!scnOpen(e))return;if(e.grp)return scnGrp(e.grp.find(x=>ls.get('cg_end',[]).includes(x))||e.grp[0]);const tiered=e.g!=='ml'&&e.chain.length,mk=scnTiers(e);
+function mimSync(){if(!ls.get('cg_end',[]).includes('bad_mimic'))return;K.slice(0,7).forEach(k=>{seenG('events/mimicbad_'+k);seenG('events/mimic_'+k)})}
+function scnMim(a){mimSync();const en=EN.bad_mimic;
+ ov(`<h2>${tr(en[0])}</h2><div class="srow"><div class="sl"><img src="assets/events/mimicbad_${K[a]}.webp"><p>${tr(en[1])}</p></div><div class="sr"><div class="hud">${tr('Same ending, one picture per area.')}</div><div class="tabs2">${ARL.map((n,i)=>`<button class="${i===a?'on':''}" onclick="scnMim(${i})">${tr(n)}</button>`).join('')}</div><button onclick="scnPlay('e_bad_mimic',0,${a})">${t('start')}</button><button onclick="galScn()">${t('back')}</button></div></div>`,1)}
+function scnPick(id){const e=SCN().find(x=>x.id===id);if(!e||!scnOpen(e))return;if(e.mim)return scnMim(0);if(e.grp)return scnGrp(e.grp.find(x=>ls.get('cg_end',[]).includes(x))||e.grp[0]);const tiered=e.g!=='ml'&&e.chain.length,mk=scnTiers(e);
  const body=tiered?`<div class="hud">Choose which dialogue tier to watch</div>`+TIERL.map((l,i)=>`<button ${mk>>i&1?'':'disabled'} onclick="scnPlay('${id}',${i})">${l}${mk>>i&1?'':' \ud83d\udd12'}</button>`).join(''):`<button onclick="scnPlay('${id}',0)">${t('start')}</button>`;
  ov(`<h2>${e.name}</h2><div class="srow"><div class="sl"><img src="assets/${e.img}.webp">${e.syn?`<p>${e.syn}</p>`:''}</div><div class="sr">${tiered||e.g==='ml'?'':`<div class="hud">This scene has no dialogue tiers.</div>`}${body}<button onclick="galScn()">${t('back')}</button></div></div>`,1)}
 
-function scnGrp(sel){const G=badGrp(),sn=id=>tr(EN[id][0]).replace(/^[^:\uff1a]*[:\uff1a]\s*/,'');
- ov(`<h2>${tr('Bad endings')}</h2><div class="srow"><div class="sl"><img src="assets/endings/ending_bad.webp"><p>${tr(EN[sel][1])}</p></div><div class="sr"><div class="hud">These endings share the same picture.</div><div class="tabs2">${G.map(id=>`<button class="${id===sel?'on':''}" onclick="scnGrp('${id}')">${sn(id)}</button>`).join('')}</div><button onclick="scnPlay('e_${sel}',0)">${t('start')}</button><button onclick="galScn()">${t('back')}</button></div></div>`,1)}
-function scnPlay(id,T){const e=SCN().find(x=>x.id===id);if(!e||!scnOpen(e))return;const a=ls.get('cg_s0',null)||{};
+function scnGrp(sel){const G=grpOf(sel),sw=G.includes('bad_swamp'),sn=id=>tr(EN[id][0]).replace(/^[^:\uff1a]*[:\uff1a]\s*/,'');
+ ov(`<h2>${tr(sw?'Swamp and bridge endings':'Bad endings')}</h2><div class="srow"><div class="sl"><img src="assets/${endP(sel)}.webp"><p>${tr(EN[sel][1])}</p></div><div class="sr"><div class="hud">These endings share the same picture.</div><div class="tabs2">${G.map(id=>`<button class="${id===sel?'on':''}" onclick="scnGrp('${id}')">${sn(id)}</button>`).join('')}</div><button onclick="scnPlay('e_${sel}',0)">${t('start')}</button><button onclick="galScn()">${t('back')}</button></div></div>`,1)}
+function scnPlay(id,T,ar){const e=SCN().find(x=>x.id===id);if(!e||!scnOpen(e)||e.grp)return;const a=ls.get('cg_s0',null)||{};
  RP={scr:document.querySelector('.s.on').id.slice(2),prevS:S,prevX:X,prevT:tierOv};tierOv=T;
  S={name:a.name&&!a.fresh?a.name:tr('Main character'),g:a.g||'m',lvl:1,xp:0,hp:40,mhp:40,mp:15,mmp:15,atk:6,gold:0,pot:0,eth:0,wp:1,eq:1,sk:[],own:{'1-0':1},ew:'1-0',pa:0,inv:{},tl:{},parts:{},ng:T>0?1:0,prog:0,x:null};
- X=e.ar!=null?{ar:e.ar,steps:0,shops:[],camps:[],farm:0}:null;cl();
+ X=e.mim?{ar:ar||0,steps:0,shops:[],camps:[],farm:0}:e.ar!=null?{ar:e.ar,steps:0,shops:[],camps:[],farm:0}:null;cl();
  if(e.g==='ml')return memLane();
  if(e.g==='end'){endBgm=ENDBG[e.end]||null;if(endBgm){delete bgmPos[endBgm];bgmHeld=false;bgmPlay(endBgm)}if(!e.chain.length)return rpEnd(e.end)}
  const run=i=>i>=e.chain.length?rpBack():vn(e.chain[i],()=>run(i+1));run(0)}
@@ -1324,7 +1341,7 @@ function useT(k){if(busy)return;busy=true;S.tl[k]--;const d=TL[k][2],c=$('cb_cov
 function flee(){if(busy)return;busy=true;if(E.boss)return say(['The cat girl refuses to run from a boss!'],eTurn);if(Math.random()<.6){sfxPlay('flee');bgmStop();say(['You tell the cat girl to retreat, and you get away!'],()=>explore())}else say(['Could not escape!'],eTurn)}
 function eTurn(){let sk=0;if(S.diff===2&&E.k2&&!E.last&&Math.random()<.4)sk=1;E.last=sk;E.sk=sk?FX.nm(E.k2):'';const d=Math.max(1,Math.round(E.atk*(sk?1.4:1)*(.85+Math.random()*.3)));setTimeout(()=>eHit(d),FX.mon(E,S.diff===2?(sk?E.k2:E.k1):undefined))}
 function eHit(d){S.hp-=d;pop(d,'cb_cat','hurt');bars();const hm=E.sk?`${E.n} uses ${E.sk}! It hits the cat girl for ${d}.`:`${E.n} hits the cat girl for ${d}.`;
- if(S.hp<=0){S.hp=0;bars();bgmStop();cat.play('cry');return say([hm,'The cat girl collapses...'],()=>{S.hp=S.mhp;ending(E.bad)})}
+ if(S.hp<=0){S.hp=0;bars();bgmStop();cat.play('cry');return say([hm,'The cat girl collapses...'],()=>{S.hp=S.mhp;endGo(E.bad)})}
  say([hm],()=>{busy=false;cm('main')})}
 function won(){const ar=X.ar,xp=(5+ar*3)*(E.boss?5:1),g=4+ar*3+Math.floor(Math.random()*5)+(E.boss?40:0);S.xp+=xp;S.gold+=g;const L2=['Victory! '+E.n+' is defeated.',`Reward: ${xp} XP and ${g} gold.`];
  while(S.xp>=S.lvl*18){S.xp-=S.lvl*18;S.lvl++;S.mhp+=8;S.mmp+=3;S.hp=S.mhp;S.mp=S.mmp;L2.push(`Level up! The cat girl reached Lv${S.lvl}. HP, MP and ATK rose.`)}
